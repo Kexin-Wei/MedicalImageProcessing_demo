@@ -11,8 +11,7 @@ from lib.folder import MedicalImageFolderMg
 
 # endLetters = "_0001"
 endLetters = ""
-# sourceDataPath = Path("D:/GitRepos/train_nnUNet/nnUNet_data_sum/test_custom/original data")
-# destinationDataPath = sourceDataPath.parent
+
 sourceDataPath = Path("D:/GitRepos/train_nnUNet/clinical_collect_data")
 destinationDataPath = Path("D:/GitRepos/train_nnUNet/clinical_collect_data_nifti")
 

@@ -1,5 +1,5 @@
 """ 2023.02.14 Kexin
-test image registration of dataset from https://ultrastmedtech.feishu.cn/wiki/wikcnshQqwJm17JlOu5s0ec6Hld
+2D image registration to get motion displacement using OpenCV
 """
 import matplotlib.image
 import numpy as np
@@ -8,7 +8,7 @@ import cv2
 import pydicom
 from lib.folder import FolderMg
 
-testDataFolder = Path("data").joinpath("6-image-registration", "sorted_collected_data")
+testDataFolder = Path("data").joinpath("image-registration", "sorted_collected_data")
 
 
 def getFixedAndMovingImage():
@@ -47,7 +47,7 @@ def opencvSIFT():
         movingGray = cv2.cvtColor(movingImage, cv2.COLOR_BGR2GRAY)
 
         # Create a SIFT object
-        sift = cv2.SIFT_create()
+        sift = cv2.SIFT.create()
 
         # Detect keypoints and compute descriptors for the two images
         fixedKeyPoints = sift.detect(fixedGray, None)

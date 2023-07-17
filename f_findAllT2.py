@@ -10,11 +10,14 @@ from pathlib import Path
 
 import pandas as pd
 import shutil
+
+from typing import List
+
 from lib.folder import NetFolderMg, FolderMg
 from lib.utility.define_class import STR_OR_PATH
 
 
-def copyT2andRecordInExcel(t2List: list[Path], destinationPath: STR_OR_PATH, excelName: str, overwriteFlag=False):
+def copyT2andRecordInExcel(t2List: List[Path], destinationPath: STR_OR_PATH, excelName: str, overwriteFlag=False):
     """
     Copy file to destination path, if it finds same names add id occurred in path to distinguish it
     :type excelName: str
