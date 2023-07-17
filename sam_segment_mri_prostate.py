@@ -99,7 +99,7 @@ for fd in sourceMg.dirs:
         plt.title(f"{middleFile.name}: Mask {i+1}, Score: {score:.3f}", fontsize=18)
         plt.savefig(destinationPath.joinpath(f"{middleFile.name}_mask_{i+1}.png"))
     print(f"{fd.name} finished")
-    
+    plt.close('all')
 print("Finished")
 
 # %%
