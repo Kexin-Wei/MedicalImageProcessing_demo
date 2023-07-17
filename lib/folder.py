@@ -178,7 +178,7 @@ class MedicalImageFolderMg(FolderMg):
 FOLDERMG_OR_PATH_OR_STR = Union[FolderMg, pathlib.Path, str]
 
 
-class NetFolderMg(FolderMg):
+class T2FolderMg(FolderMg):
     """
     Find certain file in a net-structure folder, which has multiple folders that contain their own folders inside them
     """
@@ -193,7 +193,7 @@ class NetFolderMg(FolderMg):
             for d in self.dirs:
                 # print("\n--------------------------------------------")
                 # print(f"In folder {d}")
-                cMg = NetFolderMg(d)
+                cMg = T2FolderMg(d)
                 cMg.getT2()
                 self.t2List.extend(cMg.t2List)
 

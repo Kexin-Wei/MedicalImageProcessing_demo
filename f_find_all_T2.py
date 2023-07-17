@@ -13,7 +13,7 @@ import shutil
 
 from typing import List
 
-from lib.folder import NetFolderMg, FolderMg
+from lib.folder import T2FolderMg, FolderMg
 from lib.utility.define_class import STR_OR_PATH
 
 
@@ -84,7 +84,7 @@ def copyT2andRecordInExcel(t2List: List[Path], destinationPath: STR_OR_PATH, exc
 
 
 def findAllT2(sourcePath: STR_OR_PATH, savePath: STR_OR_PATH, excelFileName: str):
-    sourcePathMg = NetFolderMg(sourcePath)
+    sourcePathMg = T2FolderMg(sourcePath)
     sourcePathMg.ls()
     sourcePathMg.getT2()
     copyT2andRecordInExcel(sourcePathMg.t2List, savePath, excelFileName, overwriteFlag=False)
