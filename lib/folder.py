@@ -6,7 +6,7 @@ Several folder Managers based on folderMeg, including:
 import pathlib
 import natsort
 import numpy as np
-from typing import Sequence, Optional, Union
+from typing import Sequence, Optional, Union, List
 
 from lib.utility.define_class import STR_OR_PATH, STR_OR_LIST, PATH_OR_LIST, DIR_OR_FILE
 
@@ -55,12 +55,12 @@ class FolderMgBase:
             self.dirs = natsort.natsorted(self.dirs)
             self.files = natsort.natsorted(self.files)
 
-    def _getFilePathByExtension(self, extension: str) -> list[pathlib.Path]:
+    def _getFilePathByExtension(self, extension: str) -> List[pathlib.Path]:
         # put extension in a pure string without . and *, e.g. python file input "py"
         assert self.fullPath is not None
         return natsort.natsorted(self.fullPath.glob(f"*.{extension}"))
 
-    def _getFilePathByExtensionList(self, extensions: list) -> list[pathlib.Path]:
+    def _getFilePathByExtensionList(self, extensions: list) -> List[pathlib.Path]:
         assert self.fullPath is not None
         files = []
         for e in extensions:
@@ -105,21 +105,21 @@ class FolderMg(FolderMgBase):
 
     def ls(self, lsOption: Optional[DIR_OR_FILE] = None) -> None:
         if lsOption == "dir" or lsOption is None:
-            if self.dirs is not None and len(self.dirs) != 0:
+            if self.dirs is None or len(self.dirs) == 0:
+                print(f"\nCurrent Folder '{self.folderName}' contains NO folders\n")
+            else:
                 print(f"\nCurrent Folder '{self.folderName}' contains {len(self.dirs)} folders, which are:")
                 for d in self.dirs[:5]:
                     print(f"  - {d.name}")
                 print(f"  - ...")
-            else:
-                print(f"\nCurrent Folder '{self.folderName}' contains NO folders\n")
         if lsOption == "file" or lsOption is None:
-            if self.files is not None and len(self.files) != 0:
+            if self.files is None or len(self.files) == 0:
+                print(f"\nCurrent Folder '{self.folderName}' contains NO files\n")
+            else:
                 print(f"\nCurrent Folder '{self.folderName}' contains {len(self.files)} files, which are:")
                 for f in self.files[:5]:
                     print(f"  - {f.name}")
                 print(f"  - ...")
-            else:
-                print(f"\nCurrent Folder '{self.folderName}' contains NO files\n")
 
 
 class FolderTagMg(FolderMgBase):
@@ -162,15 +162,15 @@ class MedicalImageFolderMg(FolderMg):
     def __init__(self, folderFullPath: STR_OR_PATH = pathlib.Path()):
         super().__init__(folderFullPath)
 
-    def getNrrdImagePath(self) -> list[pathlib.Path]:
+    def getNrrdImagePath(self) -> List[pathlib.Path]:
         # *.nrrd, *.nhdr
         return self._getFilePathByExtensionList(["nrrd", "nhdr"])
 
-    def getMetaImagePath(self) -> list[pathlib.Path]:
+    def getMetaImagePath(self) -> List[pathlib.Path]:
         # *.mha, *.mhd
         return self._getFilePathByExtensionList(["mha", "mhd"])
 
-    def getNiftiImagePath(self) -> list[pathlib.Path]:
+    def getNiftiImagePath(self) -> List[pathlib.Path]:
         # *.nia, *.nii, *.nii.gz, *.hdr, *.img, *.img.gz
         return self._getFilePathByExtensionList(["nia", "nii", "nii.gz", "hdr", "img", "img.gz"])
 
