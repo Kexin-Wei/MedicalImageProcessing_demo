@@ -107,10 +107,18 @@ def predictOneImg(
 
 
 # %%
-sam_checkpoint = "../sam_vit_h_4b8939.pth"
 model_type = "vit_h"
 # model_type = "vit_b"
 # model_type = "vit_l"
+if model_type == "vit_h":
+    sam_checkpoint = "../sam_vit_h_4b8939.pth"
+elif model_type == "vit_b":
+    sam_checkpoint = "../sam_vit_b_01ec64.pth"
+elif model_type == "vit_l":
+    sam_checkpoint = "../sam_vit_l_0b3195.pth"
+else:
+    print("No such a model type supproted in SAM.")
+    exit()
 
 device = "cuda"
 sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
