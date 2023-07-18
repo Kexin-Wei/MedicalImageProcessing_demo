@@ -5,31 +5,75 @@ from pathlib import Path
 
 import SimpleITK as sitk
 
-from lib.folder import MedicalImageFolderMg
+from lib.folder import MedicalImageFolderMg, FolderMg
 
-sourceDataPath = Path("D:/GoogleDrive/Ultrast/5 Image - Image Segmentation/2D Segmentation/0-og volume images")
-sourceMg = MedicalImageFolderMg(sourceDataPath)
-destinationPath = Path("data").joinpath("mri-prostate-slices-resample")
-# sourceMg.ls()
 
-metaFile = sourceMg.getMetaImagePath()
-nrrdFile = sourceMg.getNrrdImagePath()
+def transferMetaNrrdToPng():
+    sourceDataPath = Path(
+        "D:/GoogleDrive/Ultrast/5 Image - Image Segmentation/2D Segmentation/0-og volume images"
+    )
+    sourceMg = MedicalImageFolderMg(sourceDataPath)
+    destinationPath = Path("data").joinpath("mri-prostate-slices")
+    # sourceMg.ls()
 
-for f in nrrdFile:
-    outputFolderPath = destinationPath.joinpath(f"{f.stem}")
-    if not outputFolderPath.exists():
-        outputFolderPath.mkdir(parents=True)
-    print(f"- {f.name}")
-    nrrdImg = sitk.ReadImage(f, imageIO="NrrdImageIO")
-    sitk.WriteImage(sitk.Cast(sitk.RescaleIntensity(nrrdImg), sitk.sitkUInt8),
-                    [outputFolderPath.joinpath(f"slice{i}.png") for i in range(nrrdImg.GetSize()[-1])])
+    metaFile = sourceMg.getMetaImagePath()
+    nrrdFile = sourceMg.getNrrdImagePath()
 
-for f in metaFile:
-    print(f"- {f.name}")
-    outputFolderPath = destinationPath.joinpath(f"{f.stem}")
-    if not outputFolderPath.exists():
-        outputFolderPath.mkdir(parents=True)
-    metaImg = sitk.ReadImage(f, imageIO="MetaImageIO")
-    sitk.WriteImage(sitk.Cast(sitk.RescaleIntensity(metaImg), sitk.sitkUInt8),
-                    [outputFolderPath.joinpath(f"slice{i}.png") for i in range(metaImg.GetSize()[-1])])
-print("Done")
+    for f in nrrdFile:
+        outputFolderPath = destinationPath.joinpath(f"{f.stem}")
+        if not outputFolderPath.exists():
+            outputFolderPath.mkdir(parents=True)
+        print(f"- {f.name}")
+        nrrdImg = sitk.ReadImage(f, imageIO="NrrdImageIO")
+        sitk.WriteImage(
+            sitk.Cast(sitk.RescaleIntensity(nrrdImg), sitk.sitkUInt8),
+            [
+                outputFolderPath.joinpath(f"slice{i}.png")
+                for i in range(nrrdImg.GetSize()[-1])
+            ],
+        )
+
+    for f in metaFile:
+        print(f"- {f.name}")
+        outputFolderPath = destinationPath.joinpath(f"{f.stem}")
+        if not outputFolderPath.exists():
+            outputFolderPath.mkdir(parents=True)
+        metaImg = sitk.ReadImage(f, imageIO="MetaImageIO")
+        sitk.WriteImage(
+            sitk.Cast(sitk.RescaleIntensity(metaImg), sitk.sitkUInt8),
+            [
+                outputFolderPath.joinpath(f"slice{i}.png")
+                for i in range(metaImg.GetSize()[-1])
+            ],
+        )
+    print("Done")
+
+
+def transferDicomSeriesToPng():
+    sourceDataPath = Path(
+        "D:/GoogleDrive/Ultrast/5 Image - Image Segmentation/2D Segmentation/1-dicom slices"
+    )
+    sourceMg = FolderMg(sourceDataPath)
+    destinationPath = Path("data").joinpath("mri-prostate-slices-resample")
+    # sourceMg.ls()
+    reader = sitk.ImageSeriesReader()
+    for dicomFolder in sourceMg.dirs:
+        dicomNames = reader.GetGDCMSeriesFileNames(str(dicomFolder))
+        reader.SetFileNames(dicomNames)
+        dicomFile = reader.Execute()
+        size = dicomFile.GetSize()
+        outputFolderPath = destinationPath.joinpath(f"{dicomFolder.name}")
+        if not outputFolderPath.exists():
+            outputFolderPath.mkdir(parents=True)
+        sitk.WriteImage(
+            sitk.Cast(sitk.RescaleIntensity(dicomFile), sitk.sitkUInt8),
+            [
+                outputFolderPath.joinpath(f"slice{i}.png")
+                for i in range(dicomFile.GetSize()[-1])
+            ],
+        )
+
+
+if __name__ == "__main__":
+    # transferMetaNrrdToPng()
+    transferDicomSeriesToPng()
