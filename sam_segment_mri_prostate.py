@@ -153,7 +153,7 @@ for fd in sourceMg.dirs:
     # imgSegResult = sitk.Image(masks[0].shape[0],masks[0].shape[1], fdMg.nFile, sitk.sitkUInt8)
     segImgArray =np.array([sliceSegResult]).astype(int).squeeze()
     segImg = sitk.GetImageFromArray(segImgArray)
-    imgSavePath = outputFolderPath.joinpath(f"{fd.name}.nrrd")
+    imgSavePath = destinationPath.joinpath(f"seg_{fd.name}.nii.gz")
     sitk.WriteImage(segImg,imgSavePath)
     
 print("Finished")
