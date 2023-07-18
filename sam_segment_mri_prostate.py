@@ -4,12 +4,15 @@ using [Segment-Anything](https://github.com/facebookresearch/segment-anything) p
 # %%
 import torch
 import torchvision
+import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-import cv2
+import SimpleITK as sitk
 from pathlib import Path
 from lib.folder import FolderMg
 from segment_anything import sam_model_registry, SamPredictor
+from lib.utility.define_class import STR_OR_PATH
+
 
 print("PyTorch version:", torch.__version__)
 print("Torchvision version:", torchvision.__version__)
@@ -31,17 +34,76 @@ def show_mask(mask, ax, random_color=False):
 def show_points(coords, labels, ax, marker_size=375):
     pos_points = coords[labels == 1]
     neg_points = coords[labels == 0]
-    ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white',
-               linewidth=1.25)
-    ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white',
-               linewidth=1.25)
+    ax.scatter(
+        pos_points[:, 0],
+        pos_points[:, 1],
+        color="green",
+        marker="*",
+        s=marker_size,
+        edgecolor="white",
+        linewidth=1.25,
+    )
+    ax.scatter(
+        neg_points[:, 0],
+        neg_points[:, 1],
+        color="red",
+        marker="*",
+        s=marker_size,
+        edgecolor="white",
+        linewidth=1.25,
+    )
 
 
 def show_box(box, ax):
     x0, y0 = box[0], box[1]
     w, h = box[2] - box[0], box[3] - box[1]
-    ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green',
-                 facecolor=(0, 0, 0, 0), lw=2))
+    ax.add_patch(
+        plt.Rectangle((x0, y0), w, h, edgecolor="green", facecolor=(0, 0, 0, 0), lw=2)
+    )
+
+
+def predictOneImg(
+    imageFile: Path,
+    predictor: SamPredictor,
+    figSavePath: STR_OR_PATH,
+    onlyFirstMask: bool = False,
+):
+    image = cv2.imread(str(imageFile))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    # plt.figure()
+    # plt.imshow(image)
+    # plt.axis('on')
+    # plt.show()
+    predictor.set_image(image)
+
+    center_point = np.array(image.shape) / 2
+    input_point = np.array([[center_point[0], center_point[1]]], dtype=int)
+    input_label = np.array([1])
+
+    # plt.figure()
+    # plt.imshow(image)
+    # show_points(input_point, input_label, plt.gca())
+    # plt.axis('on')
+    # plt.show()
+
+    masks, scores, logits = predictor.predict(
+        point_coords=input_point,
+        point_labels=input_label,
+        multimask_output=True,
+    )
+
+    for i, (mask, score) in enumerate(zip(masks, scores)):
+        plt.figure(figsize=(10, 10))
+        plt.imshow(image)
+        show_mask(mask, plt.gca())
+        show_points(input_point, input_label, plt.gca())
+        plt.title(f"{imageFile.name}: Mask {i+1}, Score: {score:.3f}", fontsize=18)
+        plt.savefig(str(figSavePath) + f"{i+1}.png")
+        if onlyFirstMask:
+            break
+    plt.close("all")
+    return masks, scores
 
 
 # %%
@@ -58,50 +120,32 @@ print("SAM Model set up finished.")
 
 # %%
 sourceDataPath = Path("data").joinpath("mri-prostate-slices")
-destinationPath  = Path("result").joinpath("mri-prostate-slices")
+destinationPath = Path("result").joinpath("mri-prostate-slices")
 
 print("Processing folders:")
 sourceMg = FolderMg(sourceDataPath)
 for fd in sourceMg.dirs:
+    print(f"- {fd.name}")
     fdMg = FolderMg(fd)
-    middleFile = fdMg.files[int(fdMg.nFile / 2)]
-
-    image = cv2.imread(str(middleFile))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    # plt.figure()
-    # plt.imshow(image)
-    # plt.axis('on')
-    # plt.show()
-    predictor.set_image(image)
-
-    center_point = np.array(image.shape)/2
-    input_point = np.array([[center_point[0], center_point[1]]], dtype=int)
-    input_label = np.array([1])
-
-    # plt.figure()
-    # plt.imshow(image)
-    # show_points(input_point, input_label, plt.gca())
-    # plt.axis('on')
-    # plt.show()
-
-    masks, scores, logits = predictor.predict(
-        point_coords=input_point,
-        point_labels=input_label,
-        multimask_output=True,
-    )
 
     outputFolderPath = destinationPath.joinpath(f"{fd.name}")
     if not outputFolderPath.exists():
         outputFolderPath.mkdir(parents=True)
 
-    for i, (mask, score) in enumerate(zip(masks, scores)):
-        plt.figure(figsize=(10, 10))
-        plt.imshow(image)
-        show_mask(mask, plt.gca())
-        show_points(input_point, input_label, plt.gca())
-        plt.title(f"{middleFile.name}: Mask {i+1}, Score: {score:.3f}", fontsize=18)
-        plt.savefig(outputFolderPath.joinpath(f"{middleFile.name}_mask_{i+1}.png"))
-    print(f"- {fd.name}")
-    plt.close('all')
+    # middleFile = fdMg.files[int(fdMg.nFile / 2)]
+    # figSavePath = outputFolderPath.joinpath(f"{middleFile.name}_mask_")
+    # masks, scores = predictOneImg(middleFile, predictor, figSavePath, False)
+    sliceSegResult = []
+    for slice  in fdMg.files:
+        figSavePath = outputFolderPath.joinpath(f"{slice.name}_mask_")
+        masks, scores = predictOneImg(slice, predictor, figSavePath, True)
+        sliceSegResult.append(masks[0])
+    
+    imgSize = (masks.shape[0], masks.shape[1], fdMg.nFile) # x,y,z
+    # imgSegResult = sitk.Image(masks[0].shape[0],masks[0].shape[1], fdMg.nFile, sitk.sitkUInt8)
+    segImgArray =np.array([sliceSegResult]).astype(int).squeeze()
+    segImg = sitk.GetImageFromArray(segImgArray)
+    imgSavePath = outputFolderPath.joinpath(f"{fd.name}.nrrd")
+    sitk.WriteImage(segImg,imgSavePath)
+    
 print("Finished")
