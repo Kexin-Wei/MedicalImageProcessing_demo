@@ -54,9 +54,13 @@ device = "cuda"
 sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
 sam.to(device=device)
 predictor = SamPredictor(sam)
+print("SAM Model set up finished.")
 
 # %%
 sourceDataPath = Path("data").joinpath("mri-prostate-slices")
+destinationPath  = Path("result").joinpath("mri-prostate-slices")
+
+print("Processing folders:")
 sourceMg = FolderMg(sourceDataPath)
 for fd in sourceMg.dirs:
     fdMg = FolderMg(fd)
@@ -86,10 +90,10 @@ for fd in sourceMg.dirs:
         point_labels=input_label,
         multimask_output=True,
     )
-    
-    destinationPath  = sourceDataPath.joinpath("result",f"{fd.name}")
-    if not destinationPath.exists():
-        destinationPath.mkdir(parents=True)
+
+    outputFolderPath = destinationPath.joinpath(f"{fd.name}")
+    if not outputFolderPath.exists():
+        outputFolderPath.mkdir(parents=True)
 
     for i, (mask, score) in enumerate(zip(masks, scores)):
         plt.figure(figsize=(10, 10))
@@ -97,9 +101,7 @@ for fd in sourceMg.dirs:
         show_mask(mask, plt.gca())
         show_points(input_point, input_label, plt.gca())
         plt.title(f"{middleFile.name}: Mask {i+1}, Score: {score:.3f}", fontsize=18)
-        plt.savefig(destinationPath.joinpath(f"{middleFile.name}_mask_{i+1}.png"))
-    print(f"{fd.name} finished")
+        plt.savefig(outputFolderPath.joinpath(f"{middleFile.name}_mask_{i+1}.png"))
+    print(f"- {fd.name}")
     plt.close('all')
 print("Finished")
-
-# %%

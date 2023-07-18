@@ -193,4 +193,4 @@ cython_debug/
 .idea/
 
 # facebook sam pretrained models
-.pth
+*.pth
