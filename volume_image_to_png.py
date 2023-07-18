@@ -7,9 +7,9 @@ import SimpleITK as sitk
 
 from lib.folder import MedicalImageFolderMg
 
-sourceDataPath = Path("D:/medical images/toe test image/2. resample to less than 20 slices/12 dicom files")
+sourceDataPath = Path("D:/GoogleDrive/Ultrast/5 Image - Image Segmentation/2D Segmentation/0-og volume images")
 sourceMg = MedicalImageFolderMg(sourceDataPath)
-destinationPath = sourceDataPath.joinpath("png")
+destinationPath = Path("data").joinpath("mri-prostate-slices-resample")
 # sourceMg.ls()
 
 metaFile = sourceMg.getMetaImagePath()
