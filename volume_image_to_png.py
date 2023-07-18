@@ -2,9 +2,7 @@
 read 3D meta image and nrrd image, save every slice to png
 """
 from pathlib import Path
-
 import SimpleITK as sitk
-
 from lib.folder import MedicalImageFolderMg, FolderMg
 
 
@@ -30,7 +28,7 @@ def transferMetaNrrdToPng():
             [
                 outputFolderPath.joinpath(f"slice{i}.png")
                 for i in range(nrrdImg.GetSize()[-1])
-            ],
+            ]
         )
 
     for f in metaFile:
@@ -44,7 +42,7 @@ def transferMetaNrrdToPng():
             [
                 outputFolderPath.joinpath(f"slice{i}.png")
                 for i in range(metaImg.GetSize()[-1])
-            ],
+            ]
         )
     print("Done")
 
@@ -70,7 +68,7 @@ def transferDicomSeriesToPng():
             [
                 outputFolderPath.joinpath(f"slice{i}.png")
                 for i in range(dicomFile.GetSize()[-1])
-            ],
+            ]
         )
 
 

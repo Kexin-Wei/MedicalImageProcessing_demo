@@ -6,6 +6,7 @@ A repo based on ITK to processing medical images
 
 1. `medical_image_registration.py`: 2D image registration to get motion displacement using OpenCV
 2. `volume_image_to_png.py`: read 3D meta image and nrrd image, save every slice to png
+3. `sam_segment_mri_prostate.py`: using [Segment-Anything](https://github.com/facebookresearch/segment-anything) pretrained model to segment prostate mri slice by slice
 
 # Additional Functions
 
