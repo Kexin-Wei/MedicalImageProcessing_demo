@@ -45,7 +45,7 @@ def show_box(box, ax):
 
 
 # %%
-sam_checkpoint = "sam_vit_h_4b8939.pth"
+sam_checkpoint = "../sam_vit_h_4b8939.pth"
 model_type = "vit_h"
 # model_type = "vit_b"
 # model_type = "vit_l"
