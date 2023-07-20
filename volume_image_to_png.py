@@ -7,9 +7,7 @@ from lib.folder import MedicalImageFolderMg, FolderMg
 
 
 def transferMetaNrrdToPng():
-    sourceDataPath = Path(
-        "D:/GoogleDrive/Ultrast/5 Image - Image Segmentation/2D Segmentation/0-og volume images"
-    )
+    sourceDataPath = Path("D:/medical images/2D Segmentation/0-og volume images")
     sourceMg = MedicalImageFolderMg(sourceDataPath)
     destinationPath = Path("data").joinpath("mri-prostate-slices")
     # sourceMg.ls()
@@ -28,7 +26,7 @@ def transferMetaNrrdToPng():
             [
                 outputFolderPath.joinpath(f"slice{i}.png")
                 for i in range(nrrdImg.GetSize()[-1])
-            ]
+            ],
         )
 
     for f in metaFile:
@@ -42,15 +40,13 @@ def transferMetaNrrdToPng():
             [
                 outputFolderPath.joinpath(f"slice{i}.png")
                 for i in range(metaImg.GetSize()[-1])
-            ]
+            ],
         )
     print("Done")
 
 
 def transferDicomSeriesToPng():
-    sourceDataPath = Path(
-        "D:/GoogleDrive/Ultrast/5 Image - Image Segmentation/2D Segmentation/1-dicom slices"
-    )
+    sourceDataPath = Path("D:/medical images/2D Segmentation/1-dicom slices")
     sourceMg = FolderMg(sourceDataPath)
     destinationPath = Path("data").joinpath("mri-prostate-slices-resample")
     # sourceMg.ls()
@@ -68,7 +64,7 @@ def transferDicomSeriesToPng():
             [
                 outputFolderPath.joinpath(f"slice{i}.png")
                 for i in range(dicomFile.GetSize()[-1])
-            ]
+            ],
         )
 
 
