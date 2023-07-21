@@ -52,7 +52,9 @@ def opencvSIFT():
         # Detect keypoints and compute descriptors for the two images
         fixedKeyPoints = sift.detect(fixedGray, None)
         fixedImageKeyPoints = np.zeros_like(fixedGray)
-        fixedImageKeyPoints = cv2.drawKeypoints(fixedGray, fixedKeyPoints, fixedImageKeyPoints)
+        fixedImageKeyPoints = cv2.drawKeypoints(
+            fixedGray, fixedKeyPoints, fixedImageKeyPoints
+        )
 
         # Show the aligned images
         # cv2.imshow("Aligned Image", img_aligned)

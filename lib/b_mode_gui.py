@@ -58,10 +58,12 @@ class BModeWidget(QtWidgets.QWidget):
 
     @Slot()
     def showBMode(self):
-        self.pgmFile._getBMode(upperDisplayRangeDb=self.upperDynamicRange.value(),
-                               lowerDisplayRangeDb=self.lowerDynamicRange.value())
+        self.pgmFile._getBMode(
+            upperDisplayRangeDb=self.upperDynamicRange.value(),
+            lowerDisplayRangeDb=self.lowerDynamicRange.value(),
+        )
         self.axes.clear()
-        self.axes.imshow(self.pgmFile.bModeData, cmap='gray', aspect='auto')
+        self.axes.imshow(self.pgmFile.bModeData, cmap="gray", aspect="auto")
         self.plotCanvas.draw()
         self.resize(self.sizeHint())
 
@@ -74,5 +76,7 @@ class BModeWindow:
         self.bModeWidget = BModeWidget(pgmFile=pgmFile)
         self.bModeWidget.show()
         qApp.exec()
-        print(f"Final chosen dynamic range is "
-              f"[{self.bModeWidget.lowerDynamicRange.value():.0f},{self.bModeWidget.upperDynamicRange.value():.0f}]")
+        print(
+            f"Final chosen dynamic range is "
+            f"[{self.bModeWidget.lowerDynamicRange.value():.0f},{self.bModeWidget.upperDynamicRange.value():.0f}]"
+        )

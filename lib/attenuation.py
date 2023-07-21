@@ -2,6 +2,7 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Optional
+
 # from .rflib_math import findClosestNum, possibleFactor
 from lib.utility.define_class import AC_METHOD, INT_OR_FLOAT, INT_OR_NUMPY, STR_OR_PATH
 
@@ -28,17 +29,19 @@ def blockPlaner(length: int, blockSize: int = 10) -> INT_OR_NUMPY:
         - REMARK: idx at the front is in minor priority
     """
     blockNum = int(np.floor(length / blockSize))
-    idx = np.arange(0, length)[-blockSize * blockNum:]
+    idx = np.arange(0, length)[-blockSize * blockNum :]
     return idx, blockNum
 
 
-def singleFreqAttenuationAssessment(freq: INT_OR_FLOAT,
-                                    acDb: np.ndarray,
-                                    depth: INT_OR_FLOAT,
-                                    goalAttenuation: Optional[float] = None,
-                                    blockSize: int = 10,
-                                    showOrNot: bool = False,
-                                    figPathName: Optional[STR_OR_PATH] = None) -> np.ndarray:
+def singleFreqAttenuationAssessment(
+    freq: INT_OR_FLOAT,
+    acDb: np.ndarray,
+    depth: INT_OR_FLOAT,
+    goalAttenuation: Optional[float] = None,
+    blockSize: int = 10,
+    showOrNot: bool = False,
+    figPathName: Optional[STR_OR_PATH] = None,
+) -> np.ndarray:
     """
     determine the attenuation by block comparison
     """
@@ -59,8 +62,13 @@ def singleFreqAttenuationAssessment(freq: INT_OR_FLOAT,
     # Attenuation Assessment
     # computed element-wise divide
     # dB_0 - dB_depth = 10log10(I_0 / I_depth) = 20 * attenuation * freq * depth * log10(e)
-    at = (acDbModified[0] - acDbModified) / 20 / freq / np.log10(np.e) / np.linspace(
-        1e-10, depth, num=acDbModified.shape[0])
+    at = (
+        (acDbModified[0] - acDbModified)
+        / 20
+        / freq
+        / np.log10(np.e)
+        / np.linspace(1e-10, depth, num=acDbModified.shape[0])
+    )
 
     blockMed = np.mean(modifiedIdx.reshape(blockNum, -1), axis=1)
     xTicksLabel = np.linspace(0, depth, num=5)
@@ -68,11 +76,13 @@ def singleFreqAttenuationAssessment(freq: INT_OR_FLOAT,
 
     fig, (ax0, ax1) = plt.subplots(2)
     if goalAttenuation is not None:
-        fig.suptitle(f'Single Freq Attenuation Assessment - {freq:.0f}Mhz - Goal {goalAttenuation:.2f}')
+        fig.suptitle(
+            f"Single Freq Attenuation Assessment - {freq:.0f}Mhz - Goal {goalAttenuation:.2f}"
+        )
     else:
-        fig.suptitle(f'Single Freq Attenuation Assessment - {freq:.0f}Mhz')
+        fig.suptitle(f"Single Freq Attenuation Assessment - {freq:.0f}Mhz")
     ax0.plot(acDb, label="All AC")
-    ax0.plot(blockMed, acDbModified, '^', label="Block Ave AC")
+    ax0.plot(blockMed, acDbModified, "^", label="Block Ave AC")
     ax0.set_title("AC Value Along Depth")
     ax0.set_ylabel("Intensity (dB)")
     ax0.set_xticks(xTicks, labels=[str(x) for x in xTicksLabel])
@@ -95,13 +105,15 @@ def singleFreqAttenuationAssessment(freq: INT_OR_FLOAT,
     return at
 
 
-def multiFreqAttenuationAssessment(freqs: list[float],
-                                   acDbs: list[np.ndarray],
-                                   depth: INT_OR_FLOAT,
-                                   goalAttenuation: Optional[float] = None,
-                                   blockSize: int = 10,
-                                   showOrNot: bool = False,
-                                   figPathName: Optional[STR_OR_PATH] = None) -> np.ndarray:
+def multiFreqAttenuationAssessment(
+    freqs: list[float],
+    acDbs: list[np.ndarray],
+    depth: INT_OR_FLOAT,
+    goalAttenuation: Optional[float] = None,
+    blockSize: int = 10,
+    showOrNot: bool = False,
+    figPathName: Optional[STR_OR_PATH] = None,
+) -> np.ndarray:
     """
     determine the attenuation by frequency comparison
     """
@@ -122,11 +134,13 @@ def multiFreqAttenuationAssessment(freqs: list[float],
     # delta_dB_f1 - delta_dB_f2 = 20 * attenuation * (f1 - f2) * depth * log10(e)
     deltaDbFreq0 = acDbModified0[0] - acDbModified0
     deltaDbFreq1 = acDbModified1[0] - acDbModified1
-    at = (deltaDbFreq0 - deltaDbFreq1) \
-         / 20 \
-         / (freqs[0] - freqs[1]) \
-         / np.log10(np.e) \
-         / np.linspace(1e-10, depth, num=acDbModified1.shape[0])
+    at = (
+        (deltaDbFreq0 - deltaDbFreq1)
+        / 20
+        / (freqs[0] - freqs[1])
+        / np.log10(np.e)
+        / np.linspace(1e-10, depth, num=acDbModified1.shape[0])
+    )
 
     blockMed = np.mean(modifiedIdx.reshape(blockNum, -1), axis=1)
     xTicksLabel = np.linspace(0, depth, num=5)
@@ -135,12 +149,16 @@ def multiFreqAttenuationAssessment(freqs: list[float],
     fig, axes = plt.subplots(2, 2)
     fig.set_size_inches(10, 8)
     if goalAttenuation is not None:
-        fig.suptitle(f"Multi-Freq Attenuation Assessment"
-                     f" - {freqs[0]:.0f}-{freqs[1]:.0f}Mhz - Goal {goalAttenuation:.2f}")
+        fig.suptitle(
+            f"Multi-Freq Attenuation Assessment"
+            f" - {freqs[0]:.0f}-{freqs[1]:.0f}Mhz - Goal {goalAttenuation:.2f}"
+        )
     else:
-        fig.suptitle(f"Multi-Freq Attenuation Assessment - {freqs[0]:.0f}-{freqs[1]:.0f}Mhz")
+        fig.suptitle(
+            f"Multi-Freq Attenuation Assessment - {freqs[0]:.0f}-{freqs[1]:.0f}Mhz"
+        )
     axes[0][0].plot(acDbs[1], label=f"All AC")
-    axes[0][0].plot(blockMed, acDbModified0, '^', label=f"Block Ave AC")
+    axes[0][0].plot(blockMed, acDbModified0, "^", label=f"Block Ave AC")
     axes[0][0].set_title(f"AC Value along {depth} cm of {freqs[0]} mHz")
     axes[0][0].set_ylabel("Intensity (dB)")
     axes[0][0].set_xticks(xTicks, labels=[str(x) for x in xTicksLabel])
@@ -148,7 +166,7 @@ def multiFreqAttenuationAssessment(freqs: list[float],
     axes[0][0].grid()
 
     axes[1][0].plot(acDbs[1], label=f"All AC")
-    axes[1][0].plot(blockMed, acDbModified1, '^', label=f"Block Ave AC")
+    axes[1][0].plot(blockMed, acDbModified1, "^", label=f"Block Ave AC")
     axes[1][0].set_title(f"AC Value along {depth} cm of {freqs[1]} mHz")
     axes[1][0].set_ylabel("Intensity (dB)")
     axes[1][0].set_xticks(xTicks, labels=[str(x) for x in xTicksLabel])
@@ -157,7 +175,9 @@ def multiFreqAttenuationAssessment(freqs: list[float],
     axes[1][0].grid()
 
     axes[0][1].plot(acDbs[0] - acDbs[1], label="Delta Attenuation of All AC")
-    axes[0][1].plot(blockMed, deltaDbFreq0 - deltaDbFreq1, '^', label="Delta Attenuation")
+    axes[0][1].plot(
+        blockMed, deltaDbFreq0 - deltaDbFreq1, "^", label="Delta Attenuation"
+    )
     axes[0][1].set_title(f"Delta AC freq {freqs[0]} - {freqs[1]}")
     axes[0][1].set_ylabel("Attenuation (MHz-1*cm-1)")
     axes[0][1].grid()
@@ -165,7 +185,9 @@ def multiFreqAttenuationAssessment(freqs: list[float],
     axes[0][1].set_xticks(xTicks, labels=[str(x) for x in xTicksLabel])
 
     axes[1][1].plot(blockMed, at, label="Attenuation Value")
-    axes[1][1].plot(blockMed, np.ones_like(at) * np.mean(at), label=f"mean:{np.mean(at):.2f}")
+    axes[1][1].plot(
+        blockMed, np.ones_like(at) * np.mean(at), label=f"mean:{np.mean(at):.2f}"
+    )
     axes[1][1].set_title(f"Attenuation Assessment freq {freqs[0]} - {freqs[1]}")
     axes[1][1].set_ylabel("Attenuation (MHz-1*cm-1)")
     axes[1][1].grid()

@@ -17,7 +17,12 @@ from lib.folder import T2FolderMg, FolderMg
 from lib.utility.define_class import STR_OR_PATH
 
 
-def copyT2andRecordInExcel(t2List: List[Path], destinationPath: STR_OR_PATH, excelName: str, overwriteFlag=False):
+def copyT2andRecordInExcel(
+    t2List: List[Path],
+    destinationPath: STR_OR_PATH,
+    excelName: str,
+    overwriteFlag=False,
+):
     """
     Copy file to destination path, if it finds same names add id occurred in path to distinguish it
     :type excelName: str
@@ -43,18 +48,28 @@ def copyT2andRecordInExcel(t2List: List[Path], destinationPath: STR_OR_PATH, exc
     fileSizeSeries = []
     fileNamePatterns = []
     for f in t2List:
-        if "算法" not in str(f).lower() and f.stat().st_size > 1e6 and "Registered" not in f.stem:
+        if (
+            "算法" not in str(f).lower()
+            and f.stat().st_size > 1e6
+            and "Registered" not in f.stem
+        ):
             # 算法folder has abnormal but same name data from other clinical cases
             # size less than 1MB is too small
             # "Registered" seems duplicated
-            pathId = re.findall(r'(RD_.+?)\\', str(f))[0]
-            hospitalName = re.findall(r'[\u4e00-\u9fff]+', str(f))[0]  # find chinese characters
+            pathId = re.findall(r"(RD_.+?)\\", str(f))[0]
+            hospitalName = re.findall(r"[\u4e00-\u9fff]+", str(f))[
+                0
+            ]  # find chinese characters
             # rename
-            destinationFilePath = destinationPath.joinpath(f"{f.stem}_{hospitalName}_{f.stat().st_size}size{f.suffix}")
+            destinationFilePath = destinationPath.joinpath(
+                f"{f.stem}_{hospitalName}_{f.stat().st_size}size{f.suffix}"
+            )
             if destinationFilePath.exists():
                 print(f"Same file {f}, skipped")
                 continue
-            print(f"Copying {destinationFilePath.name} to {destinationPath} from {f.parent} ")
+            print(
+                f"Copying {destinationFilePath.name} to {destinationPath} from {f.parent} "
+            )
             shutil.copy2(f, destinationFilePath)
             fileIdSeries.append(destinationFilePath.name)
             pathSeries.append(str(f))
@@ -62,7 +77,9 @@ def copyT2andRecordInExcel(t2List: List[Path], destinationPath: STR_OR_PATH, exc
             fileSizeSeries.append(f.stat().st_size)
             fileNamePatterns.append(f.stem)
     fileNamePatterns = natsort.natsorted(set(fileNamePatterns))
-    print(f"\nIn total, {len(fileIdSeries)} files, with {len(fileNamePatterns)} patterns")
+    print(
+        f"\nIn total, {len(fileIdSeries)} files, with {len(fileNamePatterns)} patterns"
+    )
 
     with pd.ExcelWriter(excelPath) as writer:
         sFileId = pd.Series(fileIdSeries, dtype="string")
@@ -71,10 +88,14 @@ def copyT2andRecordInExcel(t2List: List[Path], destinationPath: STR_OR_PATH, exc
         sFileNamePattern = pd.Series(fileNamePatterns, dtype="string")
         sFileSize = pd.Series(fileSizeSeries, dtype=int)
 
-        df1 = pd.DataFrame({"File Name"         : sFileId,
-                            "Id"                : sId,
-                            "File Size(KB)"     : sFileSize,
-                            "File Original Path": sPath})
+        df1 = pd.DataFrame(
+            {
+                "File Name": sFileId,
+                "Id": sId,
+                "File Size(KB)": sFileSize,
+                "File Original Path": sPath,
+            }
+        )
         print(df1.head())
         df1.to_excel(writer, sheet_name="Summary of Images")
         df2 = pd.DataFrame({"File Name Patterns": sFileNamePattern})
@@ -87,7 +108,9 @@ def findAllT2(sourcePath: STR_OR_PATH, savePath: STR_OR_PATH, excelFileName: str
     sourcePathMg = T2FolderMg(sourcePath)
     sourcePathMg.ls()
     sourcePathMg.getT2()
-    copyT2andRecordInExcel(sourcePathMg.t2List, savePath, excelFileName, overwriteFlag=False)
+    copyT2andRecordInExcel(
+        sourcePathMg.t2List, savePath, excelFileName, overwriteFlag=False
+    )
 
 
 def splitData(savePath: STR_OR_PATH):

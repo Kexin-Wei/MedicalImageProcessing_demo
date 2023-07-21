@@ -3,9 +3,9 @@ Several folder Managers based on folderMeg, including:
     - pgmFolderMg: manage the pgm files inside the folder
     - parentFolderMg: manage the child directories inside the folder
 """
-import pathlib
 import natsort
 import numpy as np
+from pathlib import Path
 from typing import Sequence, Optional, Union, List
 
 from lib.utility.define_class import STR_OR_PATH, STR_OR_LIST, PATH_OR_LIST, DIR_OR_FILE
@@ -14,7 +14,7 @@ from lib.utility.define_class import STR_OR_PATH, STR_OR_LIST, PATH_OR_LIST, DIR
 class FolderMgBase:
     """
     A Base Class to manage files and folders inside a parent folder, functions include:
-        - set path 
+        - set path
         - get a list of file names and another list of directories name
         - tags function:
             - add tag to the pgmFolder, eg, "f3.5","lowAttention"
@@ -23,12 +23,12 @@ class FolderMgBase:
     """
 
     def __init__(self):
-        self.fullPath: Optional[pathlib.Path] = None
+        self.fullPath: Optional[Path] = None
         self.parentFolder = None
         self.folderName = None
         self.tags = None
-        self.dirs: Optional[Sequence[pathlib.Path]] = None
-        self.files: Optional[Sequence[pathlib.Path]] = None
+        self.dirs: Optional[Sequence[Path]] = None
+        self.files: Optional[Sequence[Path]] = None
 
     @staticmethod
     def _strToList(anyStr: STR_OR_LIST) -> list:
@@ -41,11 +41,11 @@ class FolderMgBase:
 
     @staticmethod
     def _pathToList(anyPath: PATH_OR_LIST) -> list:
-        if isinstance(anyPath, pathlib.Path):
+        if isinstance(anyPath, Path):
             return [anyPath]
         if isinstance(anyPath, list):
             return anyPath
-        print("Input is not a pathlib.Path or list.")
+        print("Input is not a Path or list.")
         return []
 
     def _getFilesDirs(self):
@@ -55,28 +55,28 @@ class FolderMgBase:
             self.dirs = natsort.natsorted(self.dirs)
             self.files = natsort.natsorted(self.files)
 
-    def _getFilePathByExtension(self, extension: str) -> List[pathlib.Path]:
+    def _getFilePathByExtension(self, extension: str) -> List[Path]:
         # put extension in a pure string without . and *, e.g. python file input "py"
         assert self.fullPath is not None
         return natsort.natsorted(self.fullPath.glob(f"*.{extension}"))
 
-    def _getFilePathByExtensionList(self, extensions: list) -> List[pathlib.Path]:
+    def _getFilePathByExtensionList(self, extensions: list) -> List[Path]:
         assert self.fullPath is not None
         files = []
         for e in extensions:
             files.extend(natsort.natsorted(self.fullPath.glob(f"*.{e}")))
         return files
 
-    def getRandomFile(self, printOut: bool = True) -> pathlib.Path:
-
+    def getRandomFile(self, printOut: bool = True) -> Path:
         if self.files is not None and len(self.files) != 0:
             randomIdx = np.random.randint(low=0, high=len(self.files))
             if printOut:
                 print(
-                    f"Get File with idx: {randomIdx}, name: {self.files[randomIdx].name}, in folder: {self.folderName}")
+                    f"Get File with idx: {randomIdx}, name: {self.files[randomIdx].name}, in folder: {self.folderName}"
+                )
             return self.files[randomIdx]
         print(f"{self.folderName} contains NO files\n")
-        return pathlib.Path()
+        return Path()
 
     @property
     def nFile(self) -> Optional[int]:
@@ -96,9 +96,9 @@ class FolderMg(FolderMgBase):
         2. ls files and dirs
     """
 
-    def __init__(self, folderFullPath: STR_OR_PATH = pathlib.Path()):
+    def __init__(self, folderFullPath: STR_OR_PATH = Path()):
         super().__init__()
-        self.fullPath = pathlib.Path(folderFullPath)
+        self.fullPath = Path(folderFullPath)
         self.parentFolder = self.fullPath.parent
         self.folderName = self.fullPath.name
         self._getFilesDirs()
@@ -108,7 +108,9 @@ class FolderMg(FolderMgBase):
             if self.dirs is None or len(self.dirs) == 0:
                 print(f"\nCurrent Folder '{self.folderName}' contains NO folders\n")
             else:
-                print(f"\nCurrent Folder '{self.folderName}' contains {len(self.dirs)} folders, which are:")
+                print(
+                    f"\nCurrent Folder '{self.folderName}' contains {len(self.dirs)} folders, which are:"
+                )
                 for d in self.dirs[:5]:
                     print(f"  - {d.name}")
                 print(f"  - ...")
@@ -116,7 +118,9 @@ class FolderMg(FolderMgBase):
             if self.files is None or len(self.files) == 0:
                 print(f"\nCurrent Folder '{self.folderName}' contains NO files\n")
             else:
-                print(f"\nCurrent Folder '{self.folderName}' contains {len(self.files)} files, which are:")
+                print(
+                    f"\nCurrent Folder '{self.folderName}' contains {len(self.files)} files, which are:"
+                )
                 for f in self.files[:5]:
                     print(f"  - {f.name}")
                 print(f"  - ...")
@@ -127,11 +131,13 @@ class FolderTagMg(FolderMgBase):
     add tags to list of folders manually
     """
 
-    def __init__(self, fullPath: STR_OR_PATH = pathlib.Path(), tags: Optional[STR_OR_LIST] = None):
+    def __init__(
+        self, fullPath: STR_OR_PATH = Path(), tags: Optional[STR_OR_LIST] = None
+    ):
         if tags is None:
             tags = []
         super().__init__()
-        self.fullPath = pathlib.Path(fullPath)
+        self.fullPath = Path(fullPath)
         self.parentFolder = self.fullPath.parent
         self.folderName = self.fullPath.name
         self._getFilesDirs()
@@ -151,7 +157,7 @@ class FolderTagMg(FolderMgBase):
             print(f"  - {t}")
 
 
-class MedicalImageFolderMg(FolderMg):
+class BaseMedicalImageFolderMg(FolderMg):
     """
     return images path given different image formats, currently supported
         - Meta Image: *.mha, *.mhd
@@ -159,23 +165,25 @@ class MedicalImageFolderMg(FolderMg):
         - Nrrd Image: *.nrrd, *.nhdr
     """
 
-    def __init__(self, folderFullPath: STR_OR_PATH = pathlib.Path()):
+    def __init__(self, folderFullPath: STR_OR_PATH = Path()):
         super().__init__(folderFullPath)
 
-    def getNrrdImagePath(self) -> List[pathlib.Path]:
+    def getNrrdImagePath(self) -> List[Path]:
         # *.nrrd, *.nhdr
         return self._getFilePathByExtensionList(["nrrd", "nhdr"])
 
-    def getMetaImagePath(self) -> List[pathlib.Path]:
+    def getMetaImagePath(self) -> List[Path]:
         # *.mha, *.mhd
         return self._getFilePathByExtensionList(["mha", "mhd"])
 
-    def getNiftiImagePath(self) -> List[pathlib.Path]:
+    def getNiftiImagePath(self) -> List[Path]:
         # *.nia, *.nii, *.nii.gz, *.hdr, *.img, *.img.gz
-        return self._getFilePathByExtensionList(["nia", "nii", "nii.gz", "hdr", "img", "img.gz"])
+        return self._getFilePathByExtensionList(
+            ["nia", "nii", "nii.gz", "hdr", "img", "img.gz"]
+        )
 
 
-FOLDERMG_OR_PATH_OR_STR = Union[FolderMg, pathlib.Path, str]
+FOLDERMG_OR_PATH_OR_STR = Union[FolderMg, Path, str]
 
 
 class T2FolderMg(FolderMg):
@@ -183,7 +191,7 @@ class T2FolderMg(FolderMg):
     Find certain file in a net-structure folder, which has multiple folders that contain their own folders inside them
     """
 
-    def __init__(self, folderFullPath: STR_OR_PATH = pathlib.Path()):
+    def __init__(self, folderFullPath: STR_OR_PATH = Path()):
         super().__init__(folderFullPath)
         self.t2List = []
 

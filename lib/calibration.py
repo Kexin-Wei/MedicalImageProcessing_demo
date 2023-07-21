@@ -69,7 +69,7 @@ class CalibrationManager:
             "overLapLength": 896,
             "hifuFreqMhz": 1.3,
             "bbnIntervalDropLeft": 0.25,
-            "bbnIntervalDropRight": 0.25
+            "bbnIntervalDropRight": 0.25,
         }
 
         self.reset(toDefault=True)
@@ -90,17 +90,19 @@ class CalibrationManager:
             for k, v in self.lastUserParameters.items():
                 setattr(self, k, self.lastUserParameters[k])
 
-    def changeSetting(self,
-                      baseLineUpdateFreq: Optional[int] = None,
-                      scanLineRowIndexStart: Optional[int] = None,
-                      scanLineRowIndexEnd: Optional[int] = None,
-                      scanLineThreshold: Optional[float] = None,
-                      hannWindowLength: Optional[int] = None,
-                      fftLength: Optional[int] = None,
-                      overLapLength: Optional[int] = None,
-                      hifuFreqMhz: Optional[float] = None,
-                      bbnIntervalDropLeft: Optional[float] = None,
-                      bbnIntervalDropRight: Optional[float] = None):
+    def changeSetting(
+        self,
+        baseLineUpdateFreq: Optional[int] = None,
+        scanLineRowIndexStart: Optional[int] = None,
+        scanLineRowIndexEnd: Optional[int] = None,
+        scanLineThreshold: Optional[float] = None,
+        hannWindowLength: Optional[int] = None,
+        fftLength: Optional[int] = None,
+        overLapLength: Optional[int] = None,
+        hifuFreqMhz: Optional[float] = None,
+        bbnIntervalDropLeft: Optional[float] = None,
+        bbnIntervalDropRight: Optional[float] = None,
+    ):
         localsItemsCopy = locals().copy()
         # assign
         for k, v in localsItemsCopy.items():
@@ -108,7 +110,10 @@ class CalibrationManager:
                 if v is not None:
                     setattr(self, k, v)
                 else:
-                    if self.lastUserParameters is not None and k in self.lastUserParameters.keys():
+                    if (
+                        self.lastUserParameters is not None
+                        and k in self.lastUserParameters.keys()
+                    ):
                         setattr(self, k, self.lastUserParameters[k])
                     else:
                         setattr(self, k, self.defaultParameters[k])
@@ -159,9 +164,11 @@ class CalibrationManager:
 
     def _receivePgmFile(self, pgmFilePath: STR_OR_PATH):
         self.pgmFile = PGMFile(pgmFilePath)
-        self.pgmFile.updateStftParameters(fftLength=self.fftLength,
-                                          hannWindowLength=self.hannWindowLength,
-                                          overlapLength=self.overLapLength)
+        self.pgmFile.updateStftParameters(
+            fftLength=self.fftLength,
+            hannWindowLength=self.hannWindowLength,
+            overlapLength=self.overLapLength,
+        )
 
     def _phaseCheck(self):
         """
@@ -183,24 +190,36 @@ class CalibrationManager:
                 self.baseLineMean = stftMagnitudeDbMean
             else:
                 assert self.baseLineMean.shape == stftMagnitudeDbMean.shape
-                self.baseLineMean = np.vstack([self.baseLineMean, stftMagnitudeDbMean]).mean(axis=0)
+                self.baseLineMean = np.vstack(
+                    [self.baseLineMean, stftMagnitudeDbMean]
+                ).mean(axis=0)
 
     def _isHifu(self) -> bool:
         """
         return isHifu flag from PGMFile Class,
         if is None, calculate it
         """
-        assert self.pgmFile is not None and isinstance(self.pgmFile.rf, np.ndarray) and isinstance(
-            self.backgroundRfSect, np.ndarray)
+        assert (
+            self.pgmFile is not None
+            and isinstance(self.pgmFile.rf, np.ndarray)
+            and isinstance(self.backgroundRfSect, np.ndarray)
+        )
         if self.pgmFile.isHifu is None:
             rfSection = self.pgmFile.rf[self.scanLineRowRange, :]
-            rfSectionDiffAbs = np.absolute(np.mean(rfSection - self.backgroundRfSect, axis=0))  # mean along the depth
-            overThresholdIndex: np.ndarray = np.argwhere(rfSectionDiffAbs > self.scanLineThreshold)
+            rfSectionDiffAbs = np.absolute(
+                np.mean(rfSection - self.backgroundRfSect, axis=0)
+            )  # mean along the depth
+            overThresholdIndex: np.ndarray = np.argwhere(
+                rfSectionDiffAbs > self.scanLineThreshold
+            )
             if overThresholdIndex.size:
                 indexRange = overThresholdIndex[-1] - overThresholdIndex[0]
                 self.pgmFile.hifuScanLine = np.array(  # type: ignore
-                    [overThresholdIndex[0] + int(0.1 * indexRange),
-                     overThresholdIndex[-1] - int(0.3 * indexRange)]).squeeze()
+                    [
+                        overThresholdIndex[0] + int(0.1 * indexRange),
+                        overThresholdIndex[-1] - int(0.3 * indexRange),
+                    ]
+                ).squeeze()
                 assert self.pgmFile.hifuScanLine[0] < self.pgmFile.hifuScanLine[1]
                 self.pgmFile.isHifu = True
             else:
@@ -212,29 +231,50 @@ class CalibrationManager:
         bbnIntervals = nInterval x 1
         """
         assert self.pgmFile is not None
-        stftMagnitudeDbScanlineMeanDenoise = self.pgmFile.stftMagnitudeDbScanlineMean - self.baseLineMean
-        scanLineBbnIntervals = stftMagnitudeDbScanlineMeanDenoise[self._getHarmonicsIndexes()]
+        stftMagnitudeDbScanlineMeanDenoise = (
+            self.pgmFile.stftMagnitudeDbScanlineMean - self.baseLineMean
+        )
+        scanLineBbnIntervals = stftMagnitudeDbScanlineMeanDenoise[
+            self._getHarmonicsIndexes()
+        ]
         self.pgmFile.bbnIntervals = scanLineBbnIntervals.mean(axis=0)
         return self.pgmFile.bbnIntervals
 
     def _getHarmonicsIndexes(self) -> np.ndarray:
-        assert self.pgmFile is not None and self.pgmFile.fsMhz is not None and self.hifuFreqMhz is not None and isinstance(
-            self.baseLineMean, np.ndarray)
+        assert (
+            self.pgmFile is not None
+            and self.pgmFile.fsMhz is not None
+            and self.hifuFreqMhz is not None
+            and isinstance(self.baseLineMean, np.ndarray)
+        )
         if self.harmonicFreqSectionIndexes is None:
             scanFreq = self.pgmFile.fsMhz / 2
             nHarmonics = np.floor(scanFreq / self.hifuFreqMhz).astype(int)
             nFFT = self.baseLineMean.size
-            harmonicFreqSectionIndexes = (nFFT * self.hifuFreqMhz /
-                                          scanFreq) * np.c_[np.arange(nHarmonics) + 0.25,
-                                                            (np.arange(nHarmonics) + 1) - 0.25]
-            minRange = np.min(np.absolute(harmonicFreqSectionIndexes[:, 0] -
-                                          harmonicFreqSectionIndexes[:, 1])).astype(int)
-            harmonicFreqSectionIndexes = np.vstack(
-                (harmonicFreqSectionIndexes[:, 0], harmonicFreqSectionIndexes[:, 0] + minRange)).astype(int).T
-            self.harmonicFreqSectionIndexes = np.linspace(harmonicFreqSectionIndexes[:, 0],
-                                                          harmonicFreqSectionIndexes[:, 1],
-                                                          num=minRange,
-                                                          dtype=np.int32)
+            harmonicFreqSectionIndexes = (nFFT * self.hifuFreqMhz / scanFreq) * np.c_[
+                np.arange(nHarmonics) + 0.25, (np.arange(nHarmonics) + 1) - 0.25
+            ]
+            minRange = np.min(
+                np.absolute(
+                    harmonicFreqSectionIndexes[:, 0] - harmonicFreqSectionIndexes[:, 1]
+                )
+            ).astype(int)
+            harmonicFreqSectionIndexes = (
+                np.vstack(
+                    (
+                        harmonicFreqSectionIndexes[:, 0],
+                        harmonicFreqSectionIndexes[:, 0] + minRange,
+                    )
+                )
+                .astype(int)
+                .T
+            )
+            self.harmonicFreqSectionIndexes = np.linspace(
+                harmonicFreqSectionIndexes[:, 0],
+                harmonicFreqSectionIndexes[:, 1],
+                num=minRange,
+                dtype=np.int32,
+            )
         return self.harmonicFreqSectionIndexes
 
     def _updateBackgroundRfDataSect(self):

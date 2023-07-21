@@ -29,7 +29,7 @@ def readTxt(filePath: STR_OR_PATH) -> np.ndarray:
         skipLines(f, 1)
         allLines = f.readlines()
         for line in allLines:
-            temp = line.strip('\n').split(separator)
+            temp = line.strip("\n").split(separator)
             temp = [float(x) for x in temp]
             couplerData.append(temp)
         return np.array(couplerData)
