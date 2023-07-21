@@ -7,7 +7,7 @@ reading all the medical images in the designated folder, and convert them into n
 import SimpleITK as sitk
 from pathlib import Path
 
-from lib.folder import MedicalImageFolderMg
+from lib.folder import BaseMedicalImageFolderMg
 
 # endLetters = "_0001"
 endLetters = ""
@@ -17,7 +17,7 @@ destinationDataPath = Path("D:/GitRepos/train_nnUNet/clinical_collect_data_nifti
 
 if not destinationDataPath.exists():
     destinationDataPath.mkdir()
-sourceMg = MedicalImageFolderMg(sourceDataPath)
+sourceMg = BaseMedicalImageFolderMg(sourceDataPath)
 sourceMg.ls()
 
 metaImageFiles = sourceMg.getMetaImagePath()
