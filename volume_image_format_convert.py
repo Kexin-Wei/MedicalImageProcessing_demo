@@ -2,6 +2,7 @@
 convert 3D volume image to dicom series
 """
 import time
+import natsort
 import SimpleITK as sitk
 import numpy as np
 from pathlib import Path
@@ -59,15 +60,14 @@ def fromDicomSeriesToDicomSeries():
             f", pixel type:{dicomFile.GetPixelIDTypeAsString()}, cast to {sliceImage.GetPixelIDTypeAsString()}"
         )
 
+
 def writeSlices(writer, series_tag_values, new_img, out_dir, i):
     image_slice = new_img[:, :, i]
 
     # Tags shared by the series.
     list(
         map(
-            lambda tag_value: image_slice.SetMetaData(
-                tag_value[0], tag_value[1]
-            ),
+            lambda tag_value: image_slice.SetMetaData(tag_value[0], tag_value[1]),
             series_tag_values,
         )
     )
@@ -97,9 +97,22 @@ def writeSlices(writer, series_tag_values, new_img, out_dir, i):
     writer.SetFileName(str(Path(out_dir).joinpath(f"{i}.dcm")))
     writer.Execute(image_slice)
 
+
+def checkOverflow(array: np.ndarray, type: np.dtype) -> bool:
+    if array.max() > np.iinfo(type).max:
+        print(f"Overflow! max:{array.max()}, type:{type}")
+        return True
+    if array.min() < np.iinfo(type).min:
+        print(f"Overflow! min:{array.min()}, type:{type}")
+        return True
+    return False
+
+
 def fromNrrdMetaFileToDicomSeries():
     sourceDataPath = Path("D:/medical images/2D Segmentation/0-og volume images")
-    destinationPath = Path("data").joinpath("mri-prostate-slices-unsigned-og")
+    destinationPath = Path("data").joinpath(
+        "mri-prostate-slices-unsigned-og-normalized"
+    )
     sourceMg = BaseMedicalImageFolderMg(sourceDataPath)
     nrrdFiles = sourceMg.getNrrdImagePath()
     metaFiles = sourceMg.getMetaImagePath()
@@ -107,11 +120,9 @@ def fromNrrdMetaFileToDicomSeries():
     print(
         f"Start processing {len(nrrdFiles)} nrrd files and {len(metaFiles)} meta files"
     )
-    allFiles = nrrdFiles + metaFiles
+    allFiles = natsort.natsorted(nrrdFiles + metaFiles)
     for file in allFiles:
         img = sitk.ReadImage(str(file))
-        if img.GetPixelIDValue() != sitk.sitkInt16:
-            continue
         print(
             f"- {file.name}, type:{img.GetPixelIDTypeAsString()}, type:{img.GetPixelIDValue()}",
             end="...",
@@ -170,18 +181,24 @@ def fromNrrdMetaFileToDicomSeries():
             ("0008|103e", "Created-SimpleITK"),  # Series Description
         ]
 
-        imgArray = sitk.GetArrayFromImage(resampleImg).astype(np.int32)
-        imgArray = imgArray + 32768
+        imgArray = sitk.GetArrayFromImage(resampleImg).astype(np.int64)
+        # normalize to 0 to 1899
+        imgArray = imgArray - imgArray.min()
+        imgArray = imgArray * 1.0 / imgArray.max() * 1899
+        if checkOverflow(imgArray, np.uint16):
+            continue
         imgArray = imgArray.astype(np.uint16)
         new_img = sitk.GetImageFromArray(imgArray)
         new_img.SetSpacing(new_spacing)
         new_img.SetOrigin(img.GetOrigin())
         new_img.SetDirection(img.GetDirection())
-        
+
         # Write slices to output directory
         list(
             map(
-                lambda i: writeSlices(writer, series_tag_values, new_img, outputPath, i),
+                lambda i: writeSlices(
+                    writer, series_tag_values, new_img, outputPath, i
+                ),
                 range(new_img.GetDepth()),
             )
         )

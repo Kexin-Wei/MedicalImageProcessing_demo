@@ -87,7 +87,6 @@ class MedicalImageFolderMg(BaseMedicalImageFolderMg):
         series_reader.MetaDataDictionaryArrayUpdateOn()
         series_reader.LoadPrivateTagsOn()
         img = series_reader.Execute()
-
         return
 
     def readSitkImageAndStoreInfo(
