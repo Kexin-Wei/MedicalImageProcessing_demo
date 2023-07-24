@@ -28,6 +28,16 @@ class BasicSAM:
         self.predictor = SamPredictor(self.sam)
         print("SAM Model set up finished.")
 
+    def skipPredictAndSaveEmpty(self, imageFile: Path, figSavePath: STR_OR_PATH):
+        image = cv2.imread(str(imageFile))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        mask = np.zeros((image.shape[0], image.shape[1]))
+        plt.figure(figsize=(10, 10))
+        plt.imshow(image)
+        plt.title(f"{imageFile.name}: No Mask", fontsize=18)
+        plt.savefig(str(figSavePath) + "_mask_1.png")
+        return mask
+
     def predictOneImg(
         self,
         imageFile: Path,
@@ -65,7 +75,7 @@ class BasicSAM:
             self.show_mask(mask, plt.gca())
             self.show_points(input_point, input_label, plt.gca())
             plt.title(f"{imageFile.name}: Mask {i+1}, Score: {score:.3f}", fontsize=18)
-            plt.savefig(str(figSavePath) + f"{i+1}.png")
+            plt.savefig(str(figSavePath) + f"_mask_{i+1}.png")
             if onlyFirstMask:
                 break
         plt.close("all")
