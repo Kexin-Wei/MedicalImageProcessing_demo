@@ -7,6 +7,7 @@ import SimpleITK as sitk
 import numpy as np
 from pathlib import Path
 from lib.folder import FolderMg, BaseMedicalImageFolderMg
+from lib.medical_folder import MedicalImageFolderMg
 
 
 def fromDicomSeriesToDicomSeries():
@@ -207,5 +208,9 @@ def fromNrrdMetaFileToDicomSeries():
 
 if __name__ == "__main__":
     # fromDicomSeriesToDicomSeries()
-    fromNrrdMetaFileToDicomSeries()
+    # fromNrrdMetaFileToDicomSeries()
+
+    # from dicom series to dicom series
+    sourceDataPath = Path("D:/medical images/2D Segmentation/1-dicom slices")
+    sourceMg = MedicalImageFolderMg(sourceDataPath)
     print("Finished!")
