@@ -14,6 +14,9 @@ class BasicSAM:
             self.sam_checkpoint = "../sam_vit_b_01ec64.pth"
         elif model_type == "vit_l":
             self.sam_checkpoint = "../sam_vit_l_0b3195.pth"
+        elif model_type == 'medsam_vit_b':
+            model_type = "vit_b"
+            self.sam_checkpoint = "../medsam_vit_b.pth"
         else:
             print(
                 "No such a model type supproted in SAM, select vit_h by default."
