@@ -7,7 +7,7 @@ import numpy as np
 import SimpleITK as sitk
 from pathlib import Path
 from lib.folder import FolderMg
-from lib.sam_base import BasicSAM
+from lib.med_image.sam_base import BasicSAM
 
 print("PyTorch version:", torch.__version__)
 print("CUDA is available:", torch.cuda.is_available())
@@ -18,14 +18,14 @@ destinationPath = Path("result").joinpath(sourceFolderName)
 
 samModel = BasicSAM("vit_h")
 slice_range = {
-    "1": [2, 7],
-    "2": [9, 12],
-    "3": [3, 6],
-    "4": [6, 12],
-    "6": [6, 9],
-    "7": [4, 15],
-    "8": [5, 7],
-    "9": [6, 9],
+    "1" : [2, 7],
+    "2" : [9, 12],
+    "3" : [3, 6],
+    "4" : [6, 12],
+    "6" : [6, 9],
+    "7" : [4, 15],
+    "8" : [5, 7],
+    "9" : [6, 9],
     "10": [3, 9],
     "11": [7, 10],
     "12": [4, 7],

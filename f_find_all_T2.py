@@ -18,10 +18,10 @@ from lib.utility.define_class import STR_OR_PATH
 
 
 def copyT2andRecordInExcel(
-    t2List: List[Path],
-    destinationPath: STR_OR_PATH,
-    excelName: str,
-    overwriteFlag=False,
+        t2List: List[Path],
+        destinationPath: STR_OR_PATH,
+        excelName: str,
+        overwriteFlag=False,
 ):
     """
     Copy file to destination path, if it finds same names add id occurred in path to distinguish it
@@ -49,9 +49,9 @@ def copyT2andRecordInExcel(
     fileNamePatterns = []
     for f in t2List:
         if (
-            "算法" not in str(f).lower()
-            and f.stat().st_size > 1e6
-            and "Registered" not in f.stem
+                "算法" not in str(f).lower()
+                and f.stat().st_size > 1e6
+                and "Registered" not in f.stem
         ):
             # 算法folder has abnormal but same name data from other clinical cases
             # size less than 1MB is too small
@@ -90,9 +90,9 @@ def copyT2andRecordInExcel(
 
         df1 = pd.DataFrame(
             {
-                "File Name": sFileId,
-                "Id": sId,
-                "File Size(KB)": sFileSize,
+                "File Name"         : sFileId,
+                "Id"                : sId,
+                "File Size(KB)"     : sFileSize,
                 "File Original Path": sPath,
             }
         )
