@@ -4,9 +4,11 @@ using region growing to segment prostate cancer
 
 
 import numpy as np
+import cv2 as cv
+from pathlib import Path
 from lib.folder.basic import FolderMg
-
-from lib.med_image.region_grow import *
+from lib.utility.define_class import TwoDConnectionType
+from lib.med_image.region_grow import RegionGrow
 
 
 def test_region_growing():
@@ -17,20 +19,18 @@ def test_region_growing():
 
     folder = FolderMg(mg.dirs[2])
     file = folder.files[11]
-    img = read_preprocess(file)
-    # cv.imshow("img", img)
-    # cv.waitKey(0)
 
-    input_p = tuple((np.array(img.shape) / 2).astype(int))
-    print(input_p)
-
-    init_seeds = Queue()
-    init_seeds.append(input_p)
-    seg_img = region_growing(
-        img, init_seeds, connect_type=TwoDConnectionType.four, threshold=threshold
+    img = cv.imread(str(file))
+    init_p = (np.array(img.shape) / 2).astype(int)
+    rg = RegionGrow(
+        file,
+        prompt_point=(init_p[0], init_p[1]),
+        threshold=threshold,
+        connect_type=TwoDConnectionType.four,
     )
-    seg_img = fill_hole(seg_img)
-    show_side_by_side(img, seg_img, input_point=input_p)
+
+    rg.region_growing()
+    rg.show_side_by_side()
 
 
 if __name__ == "__main__":
