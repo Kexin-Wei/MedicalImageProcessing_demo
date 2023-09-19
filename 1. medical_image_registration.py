@@ -6,7 +6,7 @@ import numpy as np
 from pathlib import Path
 import cv2
 import pydicom
-from lib.folder import FolderMg
+from lib.folder.basic import FolderMg
 
 testDataFolder = Path("data").joinpath("image-registration", "sorted_collected_data")
 
