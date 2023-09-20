@@ -12,6 +12,8 @@ A repo based on ITK to processing medical images
    - `MedSAM.ipynb`: try MedSAM on prostate
 5. `ConstructOwnDataset.ipynb`: build dataset to feed to nnUNet2 training
 6. `4d_dicom_reader.py`: test dicom reading for 4D dicom image
+7. `prostate_canser_segmentation.py`: use region grow or k-means functions to find the cancer
+8. `systematic_biopsy_plan.py`: plan 10/12 core systematic biopsy points
 
 
 # Additional Functions
