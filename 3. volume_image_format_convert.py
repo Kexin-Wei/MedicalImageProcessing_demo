@@ -6,8 +6,8 @@ import natsort
 import SimpleITK as sitk
 import numpy as np
 from pathlib import Path
-from lib.folder import FolderMg, BaseMedicalImageFolderMg
-from lib.folder.medical_folder import MedicalImageFolderMg
+from lib.folder.basic import FolderMg
+from lib.folder.med import MedicalImageFolderMg, BaseMedicalImageFolderMg
 
 
 def fromDicomSeriesToDicomSeries():
