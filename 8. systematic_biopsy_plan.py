@@ -1,10 +1,12 @@
 import vtk
+import cv2
+import numpy as np
 from pathlib import Path
 from lib.folder.basic import FolderMg
 
 
 data_path = Path("data").joinpath("biopsy-plan")
-result_path = Path("result").joinpath("biopsy-plan")
+result_path = Path("result").joinpath("biopsy-plan", "boundary_box")
 mg = FolderMg(data_path)
 mg.ls()
 
@@ -136,42 +138,67 @@ def add_specimen(p: tuple):
     return actor
 
 
-colors = vtk.vtkNamedColors()
+def test_biopsy_plan():
+    colors = vtk.vtkNamedColors()
 
-prostate_reader = vtk.vtkSTLReader()
-prostate_reader.SetFileName(str(prostate_file))
-prostate_reader.Update()
-prostate_poly = prostate_reader.GetOutput()
+    prostate_reader = vtk.vtkSTLReader()
+    prostate_reader.SetFileName(str(prostate_file))
+    prostate_reader.Update()
+    prostate_poly = prostate_reader.GetOutput()
+
+    mapper1 = vtk.vtkPolyDataMapper()
+    mapper1.SetInputData(prostate_reader.GetOutput())
+    actor1 = vtk.vtkActor()
+    actor1.SetMapper(mapper1)
+    actor1.GetProperty().SetColor(colors.GetColor3d("Red"))
+    actor1.GetProperty().SetOpacity(0.5)
+
+    prostate_bounds = actor1.GetBounds()
+    print(prostate_bounds)
+    p1 = (prostate_bounds[1], prostate_bounds[2])
+    p2 = (prostate_bounds[0], prostate_bounds[3])
+
+    core_points = ten_cores(p1, p2)
+
+    # core_points = twelve_cores(p1, p2)
+    actors = []
+    for p in core_points:
+        actors.append(add_specimen(p))
+
+    renderer = vtk.vtkRenderer()
+    renderer.AddActor(actor1)
+    for a in actors:
+        renderer.AddActor(a)
+
+    window = vtk.vtkRenderWindow()
+    window.AddRenderer(renderer)
+    interactor = vtk.vtkRenderWindowInteractor()
+    interactor.SetRenderWindow(window)
+    window.Render()
+    interactor.Start()
 
 
-mapper1 = vtk.vtkPolyDataMapper()
-mapper1.SetInputData(prostate_reader.GetOutput())
-actor1 = vtk.vtkActor()
-actor1.SetMapper(mapper1)
-actor1.GetProperty().SetColor(colors.GetColor3d("Red"))
-actor1.GetProperty().SetOpacity(0.5)
+def combine_result_img_into_one():
+    result_folder = Path("result").joinpath("biopsy-plan")
+    rf_mg = FolderMg(result_folder)
+    rf_mg.ls()
 
-prostate_bounds = actor1.GetBounds()
-print(prostate_bounds)
-p1 = (prostate_bounds[1], prostate_bounds[2])
-p2 = (prostate_bounds[0], prostate_bounds[3])
+    group_img = {"ten_core": [], "twelve_core": []}
+    for f in rf_mg.files:
+        for k in group_img.keys():
+            if k in f.name.lower():
+                img = cv2.imread(str(f))
+                group_img[k].append(img)
 
-core_points = ten_cores(p1, p2)
+    # print(group_img)
+    for k in group_img.keys():
+        row1 = np.hstack((group_img[k][0], group_img[k][1], group_img[k][2]))
+        row2 = np.hstack((group_img[k][3], group_img[k][4], group_img[k][5]))
+        row3 = np.hstack((group_img[k][6], group_img[k][7], group_img[k][8]))
+        final = np.vstack((row1, row2, row3))
+        cv2.imwrite(str(result_folder.joinpath(f"{k}.png")), final)
 
-# core_points = twelve_cores(p1, p2)
-actors = []
-for p in core_points:
-    actors.append(add_specimen(p))
 
-
-renderer = vtk.vtkRenderer()
-renderer.AddActor(actor1)
-for a in actors:
-    renderer.AddActor(a)
-
-window = vtk.vtkRenderWindow()
-window.AddRenderer(renderer)
-interactor = vtk.vtkRenderWindowInteractor()
-interactor.SetRenderWindow(window)
-window.Render()
-interactor.Start()
+if __name__ == "__main__":
+    # test_biopsy_plan()
+    combine_result_img_into_one()

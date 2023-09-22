@@ -3,13 +3,14 @@
 #include <QDebug>
 #include <QDir>
 
+#include <vtkPNGWriter.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkProperty.h>
-#include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
+#include <vtkWindowToImageFilter.h>
 
 SystematicPointPlanner* SystematicPointPlanner::m_instance = nullptr;
 
@@ -27,6 +28,11 @@ SystematicPointPlanner::SystematicPointPlanner()
     QString specimenFileName = "specimen_16g.STL";
     m_modelStlFile = QFileInfo(folderPath.absoluteFilePath() + QDir::separator() + modelFileName);
     m_specimenStlFile = QFileInfo(folderPath.absoluteFilePath() + QDir::separator() + specimenFileName);
+}
+
+void SystematicPointPlanner::setModelStlFileName(QString fileName)
+{
+    m_modelStlFile = QFileInfo(fileName);
 }
 
 void SystematicPointPlanner::planSystematicPoints(SystematicPointsPlanType type)
@@ -64,7 +70,39 @@ void SystematicPointPlanner::planSystematicPoints(SystematicPointsPlanType type)
     renderWindowInteractor->SetRenderWindow(renderWindow);
 
     renderWindow->Render();
+
+    QString typeName = type == SystematicPointsPlanType::TEN_CORES ? "ten_core" : "twelve_core";
+    QString imgFile = QString("D:/GitRepos/ITKMedicalImageProcessing_demo/result/biopsy-plan") + QDir::separator() + typeName + "_" + m_modelStlFile.baseName() + ".png";
+    saveWindowToImage(imgFile, renderWindow);
+
+    renderWindowInteractor->Initialize();
     renderWindowInteractor->Start();
+}
+
+void SystematicPointPlanner::saveWindowToImage(QString& imgFileName, vtkSmartPointer<vtkRenderWindow> renderWindow)
+{
+    QFileInfo imgFileInfo(imgFileName);
+    if (!imgFileInfo.absoluteDir().exists())
+    {
+        qDebug() << "Image file save folder is not found";
+        return;
+    }
+    if (imgFileInfo.completeSuffix() != "png")
+    {
+        qDebug() << "Image file format not supported";
+        return;
+    }
+    vtkSmartPointer<vtkPNGWriter> writer = vtkSmartPointer<vtkPNGWriter>::New();
+    vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
+    windowToImageFilter->SetInput(renderWindow);
+    windowToImageFilter->SetScale(1);
+    windowToImageFilter->SetInputBufferTypeToRGB();
+    windowToImageFilter->ReadFrontBufferOff();
+    windowToImageFilter->Update();
+
+    writer->SetFileName(imgFileName.toStdString().c_str());
+    writer->SetInputConnection(windowToImageFilter->GetOutputPort());
+    writer->Write();
 }
 
 void SystematicPointPlanner::getDiagnoalPointsFromBounds()

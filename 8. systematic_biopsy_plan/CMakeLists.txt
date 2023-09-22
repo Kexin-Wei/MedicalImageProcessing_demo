@@ -20,6 +20,7 @@ find_package(VTK REQUIRED COMPONENTS
     vtkIOGeometry
     vtkInteractionStyle
     vtkRenderingOpenGL2
+    vtkImagingCore
 )
 include(${VTK_USE_FILE})
 
