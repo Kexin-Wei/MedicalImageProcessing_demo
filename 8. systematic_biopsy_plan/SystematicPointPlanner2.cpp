@@ -66,11 +66,9 @@ void SystematicPointPlanner::planSystematicPoints(SystematicPointsPlanType type)
     modelActor->GetProperty()->SetColor(1, 0, 0);
     modelActor->GetProperty()->SetOpacity(0.5);
 
-    getIntersectPointsCoord(modelReader->GetOutput(), modelActor->GetBounds(), type);
-
     m_renderer = vtkSmartPointer<vtkRenderer>::New();
     m_renderer->AddActor(modelActor);
-    std::vector<vtkSmartPointer<vtkActor>> specimenActors = generateActorFromCores(type);
+    std::vector<vtkSmartPointer<vtkActor>> specimenActors = generateActorFromCores(modelReader->GetOutput(), modelActor->GetBounds(), type);
     for (auto actor : specimenActors)
         m_renderer->AddActor(actor);
 
@@ -161,11 +159,26 @@ std::vector<QVector3D> SystematicPointPlanner::getIntersectLines(double* bounds,
     return linePoints;
 }
 
+std::vector<vtkSmartPointer<vtkActor>> SystematicPointPlanner::generateActorFromCores(vtkPolyData* modelPolyData, double* bounds, SystematicPointsPlanType type)
+{
+    std::vector<vtkSmartPointer<vtkActor>> specimenActors;
+
+    getIntersectPointsCoord(modelPolyData, bounds, type);
+    if (type == SystematicPointsPlanType::TEN_CORES)
+        tenCores();
+    else // type == SystematicPointsPlanType::TWELVE_CORESS)
+        twelveCores();
+    for (auto core : m_cores)
+        specimenActors.push_back(generateSpecimenActorFromPoint(core));
+    return specimenActors;
+}
+
 void SystematicPointPlanner::getIntersectPointsCoord(vtkPolyData* modelPolyData, double* bounds, SystematicPointsPlanType type)
 {
     if (m_intersectPoints.size() > 0)
         m_intersectPoints.clear();
 
+    // linePoints has m_nIntesectLine*2
     std::vector<QVector3D> linePoints = getIntersectLines(bounds, type);
 
     vtkSmartPointer<vtkOBBTree> tree = vtkSmartPointer<vtkOBBTree>::New();
@@ -177,14 +190,13 @@ void SystematicPointPlanner::getIntersectPointsCoord(vtkPolyData* modelPolyData,
     vtkSmartPointer<vtkPoints> intersectPoints = vtkSmartPointer<vtkPoints>::New();
     vtkSmartPointer<vtkIdList> intersectCells = vtkSmartPointer<vtkIdList>::New();
 
-    for (int i = 0; i < linePoints.size() / 2; i++)
+    for (int i = 0; i < m_nIntesectLine; i++)
     {
         double p1[3] = { linePoints[i * 2].x(), linePoints[i * 2].y(), linePoints[i * 2].z() };
         double p2[3] = { linePoints[i * 2 + 1].x(), linePoints[i * 2 + 1].y(), linePoints[i * 2 + 1].z() };
 
         tree->IntersectWithLine(p1, p2, intersectPoints, intersectCells);
-        if (intersectPoints->GetNumberOfPoints() > 2)
-            qDebug() << "Intersect points number is more than 2, which is not supported yet";
+        std::vector<QVector3D> tempPoints;
         for (int j = 0; j < intersectPoints->GetNumberOfPoints(); j++)
         {
             double* p = intersectPoints->GetPoint(j);
@@ -192,21 +204,10 @@ void SystematicPointPlanner::getIntersectPointsCoord(vtkPolyData* modelPolyData,
             point.setX(p[0]);
             point.setY(p[1]);
             point.setZ(p[2]);
-            m_intersectPoints.push_back(point);
+            tempPoints.push_back(point);
         }
+        m_intersectPoints.insert_or_assign(i, tempPoints);
     }
-}
-
-std::vector<vtkSmartPointer<vtkActor>> SystematicPointPlanner::generateActorFromCores(SystematicPointsPlanType type)
-{
-    std::vector<vtkSmartPointer<vtkActor>> specimenActors;
-    if (type == SystematicPointsPlanType::TEN_CORES)
-        tenCores();
-    else // type == SystematicPointsPlanType::TWELVE_CORESS)
-        twelveCores();
-    for (auto core : m_cores)
-        specimenActors.push_back(generateSpecimenActorFromPoint(core));
-    return specimenActors;
 }
 
 vtkSmartPointer<vtkActor> SystematicPointPlanner::generateSpecimenActorFromPoint(QVector3D& p)
@@ -246,17 +247,37 @@ void SystematicPointPlanner::tenCores()
     std::vector<QVector3D> tempCores;
     for (int i = 0; i < m_nIntesectLine; i++)
     {
-        QVector3D p1 = m_intersectPoints[2 * i];
-        QVector3D p2 = m_intersectPoints[2 * i + 1];
-        if (i == 0)
+        std::vector<QVector3D> intersectPointInLine;
+        intersectPointInLine = m_intersectPoints[i];
+        if (intersectPointInLine.size() == 2)
         {
-            tempCores = TwoCoresInbetween(p1, p2);
-            m_cores.insert(m_cores.end(), tempCores.begin(), tempCores.end());
+            QVector3D p1 = intersectPointInLine[0];
+            QVector3D p2 = intersectPointInLine[1];
+            if (i == 0)
+            {
+                tempCores = TwoCoresInbetween(p1, p2);
+                m_cores.insert(m_cores.end(), tempCores.begin(), tempCores.end());
+            }
+            else
+            {
+                tempCores = FourCoresInbetween(p1, p2);
+                m_cores.insert(m_cores.end(), tempCores.begin(), tempCores.end());
+            }
+        }
+        else if (intersectPointInLine.size() == 4)
+        {
+            QVector3D p1 = intersectPointInLine[0];
+            QVector3D p2 = intersectPointInLine[1];
+            QVector3D p3 = intersectPointInLine[2];
+            QVector3D p4 = intersectPointInLine[3];
+            std::vector<QVector3D> left = TwoCoresInbetween(p1, p2);
+            std::vector<QVector3D> right = TwoCoresInbetween(p3, p4);
+            m_cores.insert(m_cores.end(), left.begin(), left.end());
+            m_cores.insert(m_cores.end(), right.begin(), right.end());
         }
         else
         {
-            tempCores = FourCoresInbetween(p1, p2);
-            m_cores.insert(m_cores.end(), tempCores.begin(), tempCores.end());
+            qDebug() << "Intersect points size is not 4 or 2, not supported yet.";
         }
     }
 }
@@ -268,15 +289,35 @@ void SystematicPointPlanner::twelveCores()
     std::vector<QVector3D> tempCores;
     for (int i = 0; i < m_nIntesectLine; i++)
     {
-        QVector3D p1 = m_intersectPoints[2 * i];
-        QVector3D p2 = m_intersectPoints[2 * i + 1];
-        if (i == 0)
-            tempCores = TwoCoresInbetween(p1, p2);
-        else if (i == 1)
-            tempCores = TwoCoresInbetween(p1, p2, 7);
+        std::vector<QVector3D> intersectPointInLine;
+        intersectPointInLine = m_intersectPoints[i];
+        if (intersectPointInLine.size() == 2)
+        {
+            QVector3D p1 = intersectPointInLine[0];
+            QVector3D p2 = intersectPointInLine[1];
+            if (i == 0)
+                tempCores = TwoCoresInbetween(p1, p2);
+            else if (i == 1)
+                tempCores = TwoCoresInbetween(p1, p2, 7);
+            else
+                tempCores = FourCoresInbetween(p1, p2);
+            m_cores.insert(m_cores.end(), tempCores.begin(), tempCores.end());
+        }
+        else if (intersectPointInLine.size() == 4)
+        {
+            QVector3D p1 = intersectPointInLine[0];
+            QVector3D p2 = intersectPointInLine[1];
+            QVector3D p3 = intersectPointInLine[2];
+            QVector3D p4 = intersectPointInLine[3];
+            std::vector<QVector3D> left = TwoCoresInbetween(p1, p2);
+            std::vector<QVector3D> right = TwoCoresInbetween(p3, p4);
+            m_cores.insert(m_cores.end(), left.begin(), left.end());
+            m_cores.insert(m_cores.end(), right.begin(), right.end());
+        }
         else
-            tempCores = FourCoresInbetween(p1, p2);
-        m_cores.insert(m_cores.end(), tempCores.begin(), tempCores.end());
+        {
+            qDebug() << "Intersect points size is not 4 or 2, not supported yet.";
+        }
     }
 }
 

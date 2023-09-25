@@ -36,14 +36,14 @@ private:
     std::vector<QVector3D> getIntersectLines(double* bounds, SystematicPointsPlanType type);
     void getIntersectPointsCoord(vtkPolyData* modelPolyData, double* bounds, SystematicPointsPlanType type);
     void saveWindowToImage(QString& imgFileName, vtkSmartPointer<vtkRenderWindow> renderWindow);
-    std::vector<vtkSmartPointer<vtkActor>> generateActorFromCores(SystematicPointsPlanType type);
+    std::vector<vtkSmartPointer<vtkActor>> generateActorFromCores(vtkPolyData* modelPolyData, double* bounds, SystematicPointsPlanType type);
 
     static SystematicPointPlanner* m_instance;
     QFileInfo m_modelStlFile;
     QFileInfo m_specimenStlFile;
     double* m_modelBounds;
 
-    std::vector<QVector3D> m_intersectPoints;
+    std::map<int, std::vector<QVector3D>> m_intersectPoints;
     std::vector<QVector3D> m_cores;
     int m_nIntesectLine;
     vtkSmartPointer<vtkSTLReader> m_specimenReader;
