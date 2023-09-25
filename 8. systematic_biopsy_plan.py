@@ -1,13 +1,18 @@
 import cv2
 import numpy as np
+from enum import Enum
 from pathlib import Path
 from lib.folder.basic import FolderMg
-from lib.ultrasound.biopsy import BiopsyPlanWithBox
+from lib.ultrasound.biopsy import BiopsyPlanWithBox, BiopsyPlanWithBoundary
 
 
-def test_biopsy_plan():
+class PlanMethod(Enum):
+    Box = 1
+    Boundary = 2
+
+
+def test_biopsy_plan(plan_method=PlanMethod.Boundary):
     data_path = Path("data").joinpath("biopsy-plan")
-    result_path = Path("result").joinpath("biopsy-plan", "boundary_box")
     mg = FolderMg(data_path)
     mg.ls()
 
@@ -19,16 +24,26 @@ def test_biopsy_plan():
         else:
             specimen_file = f
 
-    bp = BiopsyPlanWithBox(
-        prostate_file=prostate_files[0],
-        specimen_file=specimen_file,
-        result_path=result_path,
-    )
-    bp.plan()
+    if plan_method == PlanMethod.Box:
+        result_path = Path("result").joinpath("biopsy-plan", "box")
+        bp = BiopsyPlanWithBox(
+            prostate_file=prostate_files[0],
+            specimen_file=specimen_file,
+            result_path=result_path,
+        )
+        bp.plan()
+    else:
+        result_path = Path("result").joinpath("biopsy-plan", "boundary")
+        bp = BiopsyPlanWithBoundary(
+            prostate_file=prostate_files[0],
+            specimen_file=specimen_file,
+            result_path=result_path,
+        )
+        bp.plan()
 
 
 def combine_result_img_into_one():
-    result_folder = Path("result").joinpath("biopsy-plan", "boundary_box")
+    result_folder = Path("result").joinpath("biopsy-plan", "boundary")
     rf_mg = FolderMg(result_folder)
     rf_mg.ls()
 
@@ -49,5 +64,5 @@ def combine_result_img_into_one():
 
 
 if __name__ == "__main__":
-    test_biopsy_plan()
-    # combine_result_img_into_one()
+    # test_biopsy_plan(plan_method=PlanMethod.Boundary)
+    combine_result_img_into_one()

@@ -12,16 +12,16 @@
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkWindowToImageFilter.h>
 
-SystematicPointPlanner* SystematicPointPlanner::m_instance = nullptr;
+SystematicPointPlannerWithBox* SystematicPointPlannerWithBox::m_instance = nullptr;
 
-SystematicPointPlanner* SystematicPointPlanner::getInstance()
+SystematicPointPlannerWithBox* SystematicPointPlannerWithBox::getInstance()
 {
     if (m_instance == nullptr)
-        m_instance = new SystematicPointPlanner();
+        m_instance = new SystematicPointPlannerWithBox();
     return m_instance;
 }
 
-SystematicPointPlanner::SystematicPointPlanner()
+SystematicPointPlannerWithBox::SystematicPointPlannerWithBox()
 {
     QFileInfo folderPath = QString("D:/GitRepos/ITKMedicalImageProcessing_demo/data/biopsy-plan");
     QString modelFileName = "MainMR_AxT2_seg.stl";
@@ -30,12 +30,12 @@ SystematicPointPlanner::SystematicPointPlanner()
     m_specimenStlFile = QFileInfo(folderPath.absoluteFilePath() + QDir::separator() + specimenFileName);
 }
 
-void SystematicPointPlanner::setModelStlFileName(QString fileName)
+void SystematicPointPlannerWithBox::setModelStlFileName(QString fileName)
 {
     m_modelStlFile = QFileInfo(fileName);
 }
 
-void SystematicPointPlanner::planSystematicPoints(SystematicPointsPlanType type)
+void SystematicPointPlannerWithBox::planSystematicPoints(SystematicPointsPlanType type)
 {
     if (!m_modelStlFile.exists())
     {
@@ -79,7 +79,7 @@ void SystematicPointPlanner::planSystematicPoints(SystematicPointsPlanType type)
     renderWindowInteractor->Start();
 }
 
-void SystematicPointPlanner::saveWindowToImage(QString& imgFileName, vtkSmartPointer<vtkRenderWindow> renderWindow)
+void SystematicPointPlannerWithBox::saveWindowToImage(QString& imgFileName, vtkSmartPointer<vtkRenderWindow> renderWindow)
 {
     QFileInfo imgFileInfo(imgFileName);
     if (!imgFileInfo.absoluteDir().exists())
@@ -105,7 +105,7 @@ void SystematicPointPlanner::saveWindowToImage(QString& imgFileName, vtkSmartPoi
     writer->Write();
 }
 
-void SystematicPointPlanner::getDiagnoalPointsFromBounds()
+void SystematicPointPlannerWithBox::getDiagnoalPointsFromBounds()
 {
     float midZ = (m_modelBounds[4] + m_modelBounds[5]) / 2;
     QVector3D p1, p3;
@@ -120,7 +120,7 @@ void SystematicPointPlanner::getDiagnoalPointsFromBounds()
     m_diagonalPoints.second = p3;
 }
 
-std::vector<vtkSmartPointer<vtkActor>> SystematicPointPlanner::generateActorFromCores(SystematicPointsPlanType type)
+std::vector<vtkSmartPointer<vtkActor>> SystematicPointPlannerWithBox::generateActorFromCores(SystematicPointsPlanType type)
 {
     std::vector<vtkSmartPointer<vtkActor>> specimenActors;
     std::vector<QVector3D> specimenCores;
@@ -132,7 +132,7 @@ std::vector<vtkSmartPointer<vtkActor>> SystematicPointPlanner::generateActorFrom
         specimenActors.push_back(generateSpecimenActorFromPoint(core));
     return specimenActors;
 }
-vtkSmartPointer<vtkActor> SystematicPointPlanner::generateSpecimenActorFromPoint(QVector3D& p)
+vtkSmartPointer<vtkActor> SystematicPointPlannerWithBox::generateSpecimenActorFromPoint(QVector3D& p)
 {
     if (!m_specimenStlFile.exists())
     {
@@ -162,7 +162,7 @@ vtkSmartPointer<vtkActor> SystematicPointPlanner::generateSpecimenActorFromPoint
     return specimenActor;
 }
 
-std::vector<QVector3D> SystematicPointPlanner::tenCores()
+std::vector<QVector3D> SystematicPointPlannerWithBox::tenCores()
 {
     if (m_diagonalPoints.first.isNull() || m_diagonalPoints.second.isNull())
         return std::vector<QVector3D>();
@@ -191,7 +191,7 @@ std::vector<QVector3D> SystematicPointPlanner::tenCores()
     return cores;
 }
 
-std::vector<QVector3D> SystematicPointPlanner::twelveCores()
+std::vector<QVector3D> SystematicPointPlannerWithBox::twelveCores()
 {
     if (m_diagonalPoints.first.isNull() || m_diagonalPoints.second.isNull())
         return std::vector<QVector3D>();
@@ -224,7 +224,7 @@ std::vector<QVector3D> SystematicPointPlanner::twelveCores()
     return cores;
 }
 
-std::vector<QVector3D> SystematicPointPlanner::fourCudeCentersFromDiagnolPoints(QVector3D& firstDiagonalPoint, QVector3D& secondDiagonalPoint, const bool left)
+std::vector<QVector3D> SystematicPointPlannerWithBox::fourCudeCentersFromDiagnolPoints(QVector3D& firstDiagonalPoint, QVector3D& secondDiagonalPoint, const bool left)
 {
     std::vector<QVector3D> centers;
     std::vector<QVector3D> corners = getFourCornersFromDiagnolPoints(firstDiagonalPoint, secondDiagonalPoint);
@@ -251,7 +251,7 @@ std::vector<QVector3D> SystematicPointPlanner::fourCudeCentersFromDiagnolPoints(
     return centers;
 }
 
-QVector3D SystematicPointPlanner::fourtheCenterOfLater(QVector3D& firstPoint, QVector3D& secondPoint)
+QVector3D SystematicPointPlannerWithBox::fourtheCenterOfLater(QVector3D& firstPoint, QVector3D& secondPoint)
 {
     if (firstPoint.isNull() || secondPoint.isNull())
         return QVector3D();
@@ -260,14 +260,14 @@ QVector3D SystematicPointPlanner::fourtheCenterOfLater(QVector3D& firstPoint, QV
     return fourthPoint;
 }
 
-QVector3D SystematicPointPlanner::centerOfTwoPoints(QVector3D& firstDiagonalPoint, QVector3D& secondDiagonalPoint)
+QVector3D SystematicPointPlannerWithBox::centerOfTwoPoints(QVector3D& firstDiagonalPoint, QVector3D& secondDiagonalPoint)
 {
     if (firstDiagonalPoint.isNull() || secondDiagonalPoint.isNull())
         return QVector3D();
     return (firstDiagonalPoint + secondDiagonalPoint) / 2;
 }
 
-std::vector<QVector3D> SystematicPointPlanner::getFourCornersFromDiagnolPoints(QVector3D& firstDiagonalPoint, QVector3D& secondDiagonalPoint)
+std::vector<QVector3D> SystematicPointPlannerWithBox::getFourCornersFromDiagnolPoints(QVector3D& firstDiagonalPoint, QVector3D& secondDiagonalPoint)
 {
     if (firstDiagonalPoint.isNull() || secondDiagonalPoint.isNull())
         return std::vector<QVector3D>();

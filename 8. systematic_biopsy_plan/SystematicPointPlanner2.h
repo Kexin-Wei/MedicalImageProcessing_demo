@@ -18,33 +18,34 @@ enum SystematicPointsPlanType
     TWELVE_CORESS
 };
 
-class SystematicPointPlannerWithBox
+class SystematicPointPlanner
 {
-
 public:
-    static SystematicPointPlannerWithBox* getInstance();
-    ~SystematicPointPlannerWithBox();
+    static SystematicPointPlanner* getInstance();
+    ~SystematicPointPlanner();
     void setModelStlFileName(QString fileName);
     void planSystematicPoints(SystematicPointsPlanType type);
 
 private:
-    SystematicPointPlannerWithBox();
-    QVector3D centerOfTwoPoints(QVector3D& firstDiagonalPoint, QVector3D& secondDiagonalPoint);
-    QVector3D fourtheCenterOfLater(QVector3D& firstDiagonalPoint, QVector3D& secondDiagonalPoint);
-    std::vector<QVector3D> fourCudeCentersFromDiagnolPoints(QVector3D& firstDiagonalPoint, QVector3D& secondDiagonalPoint, const bool left);
-    std::vector<QVector3D> getFourCornersFromDiagnolPoints(QVector3D& firstDiagonalPoint, QVector3D& secondDiagonalPoint);
+    SystematicPointPlanner();
+    std::vector<QVector3D> TwoCoresInbetween(QVector3D& firstDiagonalPoint, QVector3D& secondDiagonalPoint, int nSection = 6);
+    std::vector<QVector3D> FourCoresInbetween(QVector3D& firstDiagonalPoint, QVector3D& secondDiagonalPoint);
     vtkSmartPointer<vtkActor> generateSpecimenActorFromPoint(QVector3D& p);
-    std::vector<QVector3D> tenCores();
-    std::vector<QVector3D> twelveCores();
-    void getDiagnoalPointsFromBounds();
+    void tenCores();
+    void twelveCores();
+    std::vector<QVector3D> getIntersectLines(double* bounds, SystematicPointsPlanType type);
+    void getIntersectPointsCoord(vtkPolyData* modelPolyData, double* bounds, SystematicPointsPlanType type);
     void saveWindowToImage(QString& imgFileName, vtkSmartPointer<vtkRenderWindow> renderWindow);
     std::vector<vtkSmartPointer<vtkActor>> generateActorFromCores(SystematicPointsPlanType type);
 
-    static SystematicPointPlannerWithBox* m_instance;
+    static SystematicPointPlanner* m_instance;
     QFileInfo m_modelStlFile;
     QFileInfo m_specimenStlFile;
     double* m_modelBounds;
-    std::pair<QVector3D, QVector3D> m_diagonalPoints;
+
+    std::vector<QVector3D> m_intersectPoints;
+    std::vector<QVector3D> m_cores;
+    int m_nIntesectLine;
     vtkSmartPointer<vtkSTLReader> m_specimenReader;
     vtkSmartPointer<vtkRenderer> m_renderer;
 };

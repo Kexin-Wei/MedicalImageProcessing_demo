@@ -32,10 +32,12 @@ FIND_PACKAGE(Qt5 REQUIRED COMPONENTS
 
 set(PROJECT_HDRS
     SystematicPointPlanner.h
+    SystematicPointPlanner2.h
 )
 
 set(PROJECT_SOURCES
     SystematicPointPlanner.cpp
+    SystematicPointPlanner2.cpp
 )
 
 set(QT_LIBRARIES
