@@ -7,7 +7,7 @@ import cv2 as cv
 from pathlib import Path
 from lib.folder.basic import FolderMg
 from lib.utility.define_class import TwoDConnectionType
-from lib.med_image.region_grow import RegionGrow
+from lib.med_image.region_grow import RegionGrow, Similarity
 import SimpleITK as sitk
 
 
@@ -50,7 +50,7 @@ def generate_cancer_slices():
 
 
 def test_region_growing():
-    threshold = 0.5
+    threshold = 32
     folderPath = Path("data").joinpath("cancer-segmentation")
     mg = FolderMg(folderPath)
     # mg.ls()
@@ -60,15 +60,17 @@ def test_region_growing():
     file_og = mg.fullPath.joinpath(filename_og)
     file_seg = mg.fullPath.joinpath(filename_seg)
 
-    init_p = (116, 80)
+    init_p = (115, 80)
     rg = RegionGrow(
-        file_seg,
+        file_og,
         prompt_point=(init_p[0], init_p[1]),
-        seg_rf_file=file_seg,
+        # seg_rf_file=file_seg,
         threshold=threshold,
-        connect_type=TwoDConnectionType.eight,
+        connect_type=TwoDConnectionType.four,
+        similarity_standard=Similarity.origin,
     )
-    # rg.show_prompt_point_at_start()
+    print(rg.img[init_p[0], init_p[1]])
+    rg.show_prompt_point_at_start()
     rg.region_growing()
     rg.show_side_by_side()
 
