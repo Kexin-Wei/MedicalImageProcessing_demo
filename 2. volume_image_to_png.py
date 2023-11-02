@@ -3,7 +3,7 @@ read 3D meta image and nrrd image, save every slice to png
 """
 from pathlib import Path
 import SimpleITK as sitk
-from lib.folder import BaseMedicalImageFolderMg, FolderMg
+from lib.folder.med import BaseMedicalImageFolderMg, FolderMg
 
 
 def transferMetaNrrdToPng():
