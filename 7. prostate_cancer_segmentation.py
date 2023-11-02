@@ -50,7 +50,7 @@ def generate_cancer_slices():
 
 
 def test_region_growing():
-    threshold = 100
+    threshold = 0.5
     folderPath = Path("data").joinpath("cancer-segmentation")
     mg = FolderMg(folderPath)
     # mg.ls()
@@ -60,7 +60,7 @@ def test_region_growing():
     file_og = mg.fullPath.joinpath(filename_og)
     file_seg = mg.fullPath.joinpath(filename_seg)
 
-    init_p = (80, 116)
+    init_p = (116, 80)
     rg = RegionGrow(
         file_seg,
         prompt_point=(init_p[0], init_p[1]),
@@ -68,7 +68,7 @@ def test_region_growing():
         threshold=threshold,
         connect_type=TwoDConnectionType.eight,
     )
-    rg.show_prompt_point_at_start()
+    # rg.show_prompt_point_at_start()
     rg.region_growing()
     rg.show_side_by_side()
 
