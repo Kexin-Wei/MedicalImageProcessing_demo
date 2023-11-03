@@ -96,35 +96,41 @@ def test_k_mean():
 
     img = cv.imread(str(file_og), cv.IMREAD_GRAYSCALE)
     init_p = (115, 80)
-    centroids = (img[init_p[0], init_p[1]], 150)
+    centroids = np.array(
+        [[init_p[0], init_p[1], img[init_p[0], init_p[1]]], [60, 110, 150]],
+        dtype=np.float32,
+    )
 
     iter = 1
     label_img = img.copy()
     img_float = np.array(img, dtype=np.float32)
     while iter < 100:
-        print(f"Iter: {iter}, centroids: ({centroids[0]:.2f}, {centroids[1]:.2f})")
-        old_centroids_float = np.array(centroids, dtype=np.float32)
+        old_centroids = np.array(centroids, dtype=np.float32)
+        print(
+            f"Iter: {iter}, centroids: ({centroids[0]}, {centroids[1]}), error: {np.abs(centroids - old_centroids).sum()}"
+        )
         # label
         for i in range(img.shape[0]):
             for j in range(img.shape[1]):
-                d1 = abs(old_centroids_float[0] - img_float[i, j])
-                d2 = abs(old_centroids_float[1] - img_float[i, j])
+                d1 = abs(old_centroids[0, -1] - img_float[i, j])
+                d2 = abs(old_centroids[1, -1] - img_float[i, j])
                 if d1 < d2:
                     label_img[i, j] = 0
                 else:
                     label_img[i, j] = 255
 
         # update centroids
-        centroids = (
-            np.mean(img_float[label_img == 0]),
-            np.mean(img_float[label_img == 255]),
+        loc_1 = np.argwhere(label_img == 0).mean(axis=0)
+        loc_2 = np.argwhere(label_img == 255).mean(axis=0)
+        centroids = np.array(
+            [
+                [loc_1[0], loc_1[1], np.mean(img_float[label_img == 0])],
+                [loc_2[0], loc_2[1], np.mean(img_float[label_img == 255])],
+            ],
+            dtype=np.float32,
         )
-        centroids_float = np.array(centroids, dtype=np.float32)
 
-        if (
-            abs(old_centroids_float[0] - centroids_float[0]) < 1
-            and abs(old_centroids_float[1] - centroids_float[1]) < 1
-        ):
+        if np.abs(centroids - old_centroids).sum() < 1:
             break
     cv.imshow("label_img", label_img)
     cv.waitKey(0)
