@@ -12,6 +12,29 @@ import SimpleITK as sitk
 import numpy as np
 
 
+def show_side_by_side(
+    img1: np.ndarray, img2: np.ndarray, save: bool = False, save_path: str = None
+):
+    """show two images side by side"""
+    new_img = np.concatenate((img1, img2), axis=1)
+    cv.imshow("new_img", new_img)
+    cv.waitKey(0)
+    if save and save_path is not None:
+        cv.imwrite(str(save_path), new_img)
+
+
+def show_prompt_point_in_image(
+    img: np.array, prompt_point: tuple[int], save: bool = False, save_path: str = None
+):
+    clr_img = cv.cvtColor(img, cv.COLOR_GRAY2BGR)
+    assert len(prompt_point) == 2, "prompt point must be a tuple of length 2"
+    cv.circle(clr_img, (prompt_point[1], prompt_point[0]), 3, (0, 255, 0), -1)
+    cv.imshow("new_img", clr_img)
+    cv.waitKey(0)
+    if save and save_path is not None:
+        cv.imwrite(str(save_path), clr_img)
+
+
 def generate_cancer_slices():
     dataPath = Path(
         "D:/Medical Image - Research/Training Dataset/Prostate158 Cancer/prostate158_train/train"
@@ -78,9 +101,9 @@ def test_region_growing():
         similarity_standard=Similarity.origin,
     )
     print(rg.img[init_p[0], init_p[1]])
-    rg.show_prompt_point_at_start()
+    show_prompt_point_in_image(rg.img, init_p)
     rg.region_growing()
-    rg.show_side_by_side(save=True, save_path=file_save_img)
+    show_side_by_side(rg.img, rg.seg_img, save=True, save_path=file_save_img)
 
 
 def test_k_mean():
@@ -136,7 +159,33 @@ def test_k_mean():
     cv.waitKey(0)
 
 
+def test_sam():
+    import re
+    import torch
+    from lib.med_image.sam_base import BasicSAM
+
+    print("PyTorch version:", torch.__version__)
+    print("CUDA is available:", torch.cuda.is_available())
+    folder_path = Path("data").joinpath("cancer-segmentation")
+    result_path = Path("result").joinpath("cancer-segmentation")
+    mg = FolderMg(folder_path)
+    filename_og = "030_slice15.png"
+    filename_seg = "030_seg_slice15.png"
+    init_p = (80, 115)
+    threshold = 32
+    file_og = mg.full_path.joinpath(filename_og)
+    file_save_img = result_path.joinpath(f"{filename_og}.png")
+
+    samModel = BasicSAM("vit_h")
+    masks, scores = samModel.predictOneImg(file_og, file_save_img, input_point=init_p)
+    for i, (mask, score) in enumerate(zip(masks, scores)):
+        mask_int = mask.astype(np.uint8) * 255
+        cv.imshow(f"mask_{i}_score_{score}", mask_int)
+        cv.waitKey(0)
+
+
 if __name__ == "__main__":
     # generate_cancer_slices()
     # test_region_growing()
-    test_k_mean()
+    # test_k_mean()
+    test_sam()
