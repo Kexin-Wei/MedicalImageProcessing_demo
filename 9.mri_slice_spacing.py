@@ -63,20 +63,49 @@ def calculate_slice_distance():
             continue
         pure_files.append(f)
 
-    for ith_file in range(len(pure_files) - 1):
-        f_ith = pure_files[ith_file]
-        img_ith = pydicom.dcmread(f_ith)
-        actual_position_ith = calculate_coordiante_of_voxel(0, 0, img_ith)
-        slice_thickness = img_ith.SliceThickness
-        f_i1th = pure_files[ith_file + 1]
-        img_i1th = pydicom.dcmread(f_i1th)
-        actual_position_i1th = calculate_coordiante_of_voxel(0, 0, img_i1th)
-        distance = np.linalg.norm(actual_position_ith - actual_position_i1th)
+    for ith_slice in range(len(pure_files) - 1):
+        f_i = pure_files[ith_slice]
+        img_i = pydicom.dcmread(f_i)
+        actual_position_i = calculate_coordiante_of_voxel(0, 0, img_i)
+        slice_thickness = img_i.SliceThickness
+        f_i1 = pure_files[ith_slice + 1]
+        img_i1 = pydicom.dcmread(f_i1)
+        actual_position_i1 = calculate_coordiante_of_voxel(0, 0, img_i1)
+        distance = np.linalg.norm(actual_position_i - actual_position_i1)
         print(
-            f"{ith_file}: distance:{distance:.3}, slice_thickness:{slice_thickness:.3}"
+            f"{ith_slice}: distance:{distance:.3}, slice_thickness:{slice_thickness:.3}"
+        )
+
+
+def compare_dicom_slice_pixel_value_with_nrrd():
+    nrrd_file = Path(
+        "D:/Medical Image - Example/Real-Patient-Data/Patient A/Patient20201029MR_T2W_SPAIR_ax.nrrd"
+    )
+    nrrd_img = sitk.ReadImage(str(nrrd_file))
+
+    pure_files = []
+    for f in folderMg.files:
+        if f.name == "DIRFILE":
+            continue
+        pure_files.append(f)
+
+    nrrd_img_array = sitk.GetArrayFromImage(nrrd_img)
+    assert nrrd_img_array.shape[0] == len(
+        pure_files
+    ), "Number of slices from nrrd and dicom should be the same"
+
+    for ith_slice in range(nrrd_img_array.shape[0]):
+        nrrd_slice = nrrd_img_array[ith_slice, :, :]
+        slice_i = pure_files[ith_slice]
+        img_i = pydicom.dcmread(slice_i)
+        print(
+            f"{ith_slice}: nrrd shape:{nrrd_slice.shape}, "
+            f"dicom slice shape:{img_i.pixel_array.shape}, "
+            f"array equal:{(img_i.pixel_array == nrrd_slice).all()}"
         )
 
 
 if __name__ == "__main__":
     # storeDicomSliceTags()
-    calculate_slice_distance()
+    # calculate_slice_distance()
+    compare_dicom_slice_pixel_value_with_nrrd()
