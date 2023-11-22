@@ -2,7 +2,7 @@ import json
 import SimpleITK as sitk
 
 from pathlib import Path
-from lib.folder import FolderMg
+from lib.folder.basic import FolderMg
 
 filePath = Path("C:/Users/weike/Downloads/DWI-sTRA")
 folderMg = FolderMg(filePath)
@@ -58,8 +58,6 @@ def checkContentTime():
         times = hh * 3600 + mm * 60 + ss
         print(f"{i}: {contentTime[i]} - {times}")
 
-
-def readNumberofComponents():
     nops = {}
     for f in folderMg.files:
         # read each slice and their meta data
