@@ -4,11 +4,38 @@ import SimpleITK as sitk
 from pathlib import Path
 from lib.folder.basic import FolderMg
 
-filePath = Path("C:/Users/weike/Downloads/DWI-sTRA")
+filePath = Path("D:/Medical Image - Example/bug")
 folderMg = FolderMg(filePath)
 
 
 # folderMg.ls()
+def storeDicomSliceTags():
+    storePath = filePath.joinpath("json_tags")
+    if storePath.exists():
+        storePath.rmdir()
+    else:
+        storePath.mkdir()
+
+    for i, f in enumerate(folderMg.files):
+        sliceTags = {}
+        if f.name == "DIRFILE":
+            continue
+        # read each slice and their meta data
+        print(f"reading {i}.{f} ...")
+        reader = sitk.ImageFileReader()
+        reader.SetFileName(str(f))
+        reader.LoadPrivateTagsOn()
+        reader.ReadImageInformation()
+        img = reader.Execute()
+        metaData = reader.GetMetaDataKeys()
+        for key in metaData:
+            key_value = img.GetMetaData(key)
+            sliceTags[key] = key_value
+
+        with open(storePath.joinpath(f"info_slice{i}.json"), "w") as f:
+            json.dump(sliceTags, f, indent=4)
+
+
 def getInfo():
     basic_info = {}
     different_info = {}
@@ -68,7 +95,6 @@ def checkContentTime():
         img = reader.Execute()
         # metaData = reader.GetMetaDataKeys()
         nop = img.GetNumberOfComponentsPerPixel()
-        gdt = img.GetCom
         if nop not in nops.keys():
             nops[nop] = 1
         else:
@@ -76,7 +102,27 @@ def checkContentTime():
     print(nops)
 
 
+def checkImagePositionAndValue():
+    for i, f in enumerate(folderMg.files):
+        sliceTags = {}
+        if f.name == "DIRFILE":
+            continue
+        # read each slice and their meta data
+        print(f"reading {i}.{f} ...")
+        reader = sitk.ImageFileReader()
+        reader.SetFileName(str(f))
+        reader.LoadPrivateTagsOn()
+        reader.ReadImageInformation()
+        img = reader.Execute()
+
+        metaData = reader.GetMetaDataKeys()
+        for key in metaData:
+            key_value = img.GetMetaData(key)
+            sliceTags[key] = key_value
+
+
 if __name__ == "__main__":
     # getInfo()
+    # storeDicomSliceTags()
     # checkContentTime()
-    readNumberofComponents()
+    checkImagePositionAndValue()

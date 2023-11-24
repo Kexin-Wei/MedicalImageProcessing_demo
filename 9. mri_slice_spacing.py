@@ -73,7 +73,7 @@ def calculate_slice_distance():
         actual_position_i1 = calculate_coordiante_of_voxel(0, 0, img_i1)
         distance = np.linalg.norm(actual_position_i - actual_position_i1)
         print(
-            f"{ith_slice}: distance:{distance:.3}, slice_thickness:{slice_thickness:.3}"
+            f"{ith_slice}: actual_position:{actual_position_i},distance:{distance:.3}, slice_thickness:{slice_thickness:.3}"
         )
 
 
