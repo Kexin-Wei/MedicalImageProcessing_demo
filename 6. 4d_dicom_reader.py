@@ -1,10 +1,12 @@
 import json
+import os
 import SimpleITK as sitk
 
 from pathlib import Path
 from lib.folder.basic import FolderMg
 
-filePath = Path("D:/Medical Image - Example/bug")
+filePath = Path("data").joinpath("4d-dicom", "LIXIANGQIAN", "20231104115402", "802")
+# filePath = Path("data").joinpath("4d-dicom", "bug")
 folderMg = FolderMg(filePath)
 
 
@@ -102,9 +104,11 @@ def checkContentTime():
     print(nops)
 
 
-def checkImagePositionAndValue():
+def checkImagePositionAndGroupThem():
+    img_groups = {}
+    pos_groups = {}
     for i, f in enumerate(folderMg.files):
-        sliceTags = {}
+        add_to_next_group = True
         if f.name == "DIRFILE":
             continue
         # read each slice and their meta data
@@ -115,14 +119,47 @@ def checkImagePositionAndValue():
         reader.ReadImageInformation()
         img = reader.Execute()
 
-        metaData = reader.GetMetaDataKeys()
-        for key in metaData:
-            key_value = img.GetMetaData(key)
-            sliceTags[key] = key_value
+        key = "0020|0032"
+        key_value = img.GetMetaData(key)
+        position = key_value.split("\\")
+        position = [float(p) for p in position]
+        position = tuple(position)
+
+        # check if the position is already in one of the groups
+        len_groups = len(img_groups.keys())
+        for k_group in range(len_groups):
+            if position not in pos_groups[k_group]:
+                add_to_next_group = False
+                img_groups[k_group].append(str(f))
+                pos_groups[k_group].append(position)
+                # print(f"adding in group {k_group}: {position} - {f.name}")
+                break
+
+        if add_to_next_group:
+            img_groups[len_groups] = [str(f)]
+            pos_groups[len_groups] = [position]
+            # print(f"adding in group {len_groups}: {position} - {f.name}")
+
+    for k_group in img_groups.keys():
+        print(
+            f"groupd: {k_group} - len: {len(img_groups[k_group])}, imgs: {img_groups[k_group]}"
+        )
+        # show image
+        reader = sitk.ImageSeriesReader()
+        reader.SetFileNames(img_groups[k_group])
+
+        temp_dicom_img = reader.Execute()
+        write_path = Path("result").joinpath(
+            "4d-dicom", filePath.name, f"img{k_group}.dcm"
+        )
+        write_path.parent.mkdir(parents=True, exist_ok=True)
+        sitk.WriteImage(temp_dicom_img, str(write_path))
+        # if "SITK_NOSHOW" not in os.environ:
+        #     sitk.Show(temp_dicom_img, "Dicom Series")
 
 
 if __name__ == "__main__":
     # getInfo()
     # storeDicomSliceTags()
     # checkContentTime()
-    checkImagePositionAndValue()
+    checkImagePositionAndGroupThem()
