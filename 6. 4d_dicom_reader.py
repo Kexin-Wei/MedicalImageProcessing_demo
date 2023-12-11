@@ -6,16 +6,14 @@ from pathlib import Path
 from lib.folder.basic import FolderMg
 
 filePath = Path("data").joinpath("4d-dicom", "LIXIANGQIAN", "20231104115402", "802")
-# filePath = Path("data").joinpath("4d-dicom", "bug")
+# filePath = Path("data").joinpath("4d-dicom", "LEIWANXIANG", "20230703230639", "101")
 folderMg = FolderMg(filePath)
 
 
 # folderMg.ls()
 def storeDicomSliceTags():
-    storePath = filePath.joinpath("json_tags")
-    if storePath.exists():
-        storePath.rmdir()
-    else:
+    storePath = filePath.parent.joinpath(f"{filePath.name}_json_tags")
+    if not storePath.exists():
         storePath.mkdir()
 
     for i, f in enumerate(folderMg.files):
@@ -38,7 +36,7 @@ def storeDicomSliceTags():
             json.dump(sliceTags, f, indent=4)
 
 
-def getInfo():
+def getDiffInfo():
     basic_info = {}
     different_info = {}
     for f in folderMg.files:
@@ -63,9 +61,13 @@ def getInfo():
     print(different_info)
     print(basic_info)
 
-    with open("basic_info.json", "w") as f:
+    storePath = filePath.parent.joinpath(f"{filePath.name}_json_tags")
+    if not storePath.exists():
+        storePath.mkdir()
+
+    with open(str(storePath.joinpath("basic_info.json")), "w") as f:
         json.dump(basic_info, f, indent=4)
-    with open("different_info.json", "w") as f:
+    with open(str(storePath.joinpath("different_info.json")), "w") as f:
         json.dump(different_info, f, indent=4)
 
 
@@ -104,9 +106,9 @@ def checkContentTime():
     print(nops)
 
 
-def checkImagePositionAndGroupThem():
+def checkTagContentAndGroupThem(tag: str, groupBySameTag: bool = True):
     img_groups = {}
-    pos_groups = {}
+    tag_groups = {}
     for i, f in enumerate(folderMg.files):
         add_to_next_group = True
         if f.name == "DIRFILE":
@@ -119,25 +121,29 @@ def checkImagePositionAndGroupThem():
         reader.ReadImageInformation()
         img = reader.Execute()
 
-        key = "0020|0032"
+        key = tag
         key_value = img.GetMetaData(key)
-        position = key_value.split("\\")
-        position = [float(p) for p in position]
-        position = tuple(position)
 
         # check if the position is already in one of the groups
         len_groups = len(img_groups.keys())
         for k_group in range(len_groups):
-            if position not in pos_groups[k_group]:
+            if groupBySameTag and key_value in tag_groups[k_group]:
                 add_to_next_group = False
                 img_groups[k_group].append(str(f))
-                pos_groups[k_group].append(position)
-                # print(f"adding in group {k_group}: {position} - {f.name}")
+                tag_groups[k_group].append(key_value)
+                print(f"adding in group {k_group}: {key_value} - {f.name}")
+                break
+
+            if not groupBySameTag and key_value not in tag_groups[k_group]:
+                add_to_next_group = False
+                img_groups[k_group].append(str(f))
+                tag_groups[k_group].append(key_value)
+                print(f"adding in group {k_group}: {key_value} - {f.name}")
                 break
 
         if add_to_next_group:
             img_groups[len_groups] = [str(f)]
-            pos_groups[len_groups] = [position]
+            tag_groups[len_groups] = [key_value]
             # print(f"adding in group {len_groups}: {position} - {f.name}")
 
     for k_group in img_groups.keys():
@@ -155,11 +161,20 @@ def checkImagePositionAndGroupThem():
         write_path.parent.mkdir(parents=True, exist_ok=True)
         sitk.WriteImage(temp_dicom_img, str(write_path))
         # if "SITK_NOSHOW" not in os.environ:
-        #     sitk.Show(temp_dicom_img, "Dicom Series")
+        # sitk.Show(temp_dicom_img, "Dicom Series")
+
+
+def checkImagePositionAndGroupThem():
+    checkTagContentAndGroupThem("0020|0032", groupBySameTag=False)
+
+
+def checkImageOrientationAndGroupThem():
+    checkTagContentAndGroupThem("0020|0037", groupBySameTag=True)
 
 
 if __name__ == "__main__":
-    # getInfo()
+    # getDiffInfo()
     # storeDicomSliceTags()
     # checkContentTime()
     checkImagePositionAndGroupThem()
+    # checkImageOrientationAndGroupThem()
