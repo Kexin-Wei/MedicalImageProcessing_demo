@@ -25,3 +25,5 @@ A repo based on ITK to processing medical images
         - *.mha, "MetaImageIO"
 2. `f_findAllT2.py`: Find all images with string "t2" inside their names, do deep into each folder, and eventually
    save all the path of each image into an Excel
+
+3. `f_sort_data_for_erinn.py`: Sort the data in segmentation dataset in pair and put into different folders
