@@ -75,9 +75,10 @@ void main()
     }
 #else
 #ifdef NEW_METHOD
+    SystematicPointsPlanType type = SystematicPointsPlanType::TWENTYFOUR_CORES;
     SystematicPointPlanner* spp = SystematicPointPlanner::getInstance();
-    SystematicPointsPlanType type = SystematicPointsPlanType::TWELVE_CORES;
     QDir folderPath = QString("D:/GitRepos/ITKMedicalImageProcessing_demo/data/biopsy-plan");
+    QString saveImgPath = QString("D:/GitRepos/ITKMedicalImageProcessing_demo/result/biopsy-plan/new-boundary");
     QFileInfoList files = folderPath.entryInfoList();
     QString specimenFileName = "specimen_16g.STL";
     QFileInfo specimenFile = QFileInfo(folderPath.absoluteFilePath(specimenFileName));
@@ -154,12 +155,11 @@ void main()
             renderWindow->Render();
 
             QString typeName = type == SystematicPointsPlanType::TWELVE_CORES ? "twelve_core" : "twentyfour_core";
-            QString imgFile = QString("D:/GitRepos/ITKMedicalImageProcessing_demo/result/biopsy-plan/boundary") + QDir::separator() + typeName + "_" + file.baseName() + ".png";
+            QString imgFile = QString(saveImgPath) + QDir::separator() + typeName + "_" + file.baseName() + ".png";
             saveWindowToImage(imgFile, renderWindow);
 
             renderWindowInteractor->Initialize();
             renderWindowInteractor->Start();
-            break;
         }
     }
 #else
@@ -174,7 +174,7 @@ void main()
         {
             spp->setModelStlFileName(file.absoluteFilePath());
             spp->planSystematicPoints(SystematicPointsPlanType::TEN_CORES);
-            spp->planSystematicPoints(SystematicPointsPlanType::TWELVE_CORESS);
+            spp->planSystematicPoints(SystematicPointsPlanType::TWELVE_CORES);
         }
     }
 #endif

@@ -26,9 +26,9 @@ const std::vector<QVector3D> SystematicPointPlanner::planSystematicPoints(System
     case TWELVE_CORES:
         points = twelveCores(modelPolyData, bounds);
         break;
-    // case TWENTYFOUR_CORES:
-    //     points = twentyFourCores(modelPolyData, bounds);
-    //     break;
+    case TWENTYFOUR_CORES:
+        points = twentyFourCores(modelPolyData, bounds);
+        break;
     default:
         break;
     }
@@ -37,38 +37,41 @@ const std::vector<QVector3D> SystematicPointPlanner::planSystematicPoints(System
 
 const std::vector<QVector3D> SystematicPointPlanner::twelveCores(vtkSmartPointer<vtkPolyData> modelPolyData, double* bounds)
 {
-    // calculate the ylines
-    std::vector<double> ratios = { 1.0 / 6, 6.0 / 18, 10.0 / 18, 15.0 / 18 };
-    std::vector<double> yLines = getInterpolationLines(bounds[2], bounds[3], ratios);
+    // calculate the lines
+    std::vector<double> ratios = { 2.5 / 12, 3.0 / 6, 9.5 / 12 };
+
+    double xRange = bounds[1] - bounds[0];
+    double zMid = (bounds[4] + bounds[5]) / 2;
+    std::vector<std::pair<QVector3D, QVector3D>> linePoints;
+    for (int i = 0; i < ratios.size(); i++)
+    {
+        double yValue = bounds[2] + (bounds[3] - bounds[2]) * ratios[i];
+        QVector3D p1(bounds[0] - xRange * ratios[i], yValue, zMid);
+        QVector3D p2(bounds[1] + xRange * ratios[i], yValue, zMid);
+        linePoints.push_back(std::make_pair(p1, p2));
+    }
 
     // calculate the intersection points
-    std::map<int, std::vector<QVector3D>> intersectPointsMap = getModelLineIntersectionPoints(modelPolyData, bounds, yLines);
+    std::map<int, std::vector<QVector3D>> intersectPointsMap = getModelLineIntersectionPoints(modelPolyData, linePoints);
 
     // calculate the cores
     std::vector<QVector3D> cores;
     std::vector<QVector3D> tempCores;
-    for (int i = 0; i < yLines.size(); i++)
+    for (int i = 0; i < linePoints.size(); i++)
     {
-        std::vector<QVector3D> intersectPointInLine;
-        intersectPointInLine = intersectPointsMap[i];
-        if (intersectPointInLine.size() == 2)
+        if (intersectPointsMap[i].size() == 2)
         {
-            QVector3D p1 = intersectPointInLine[0];
-            QVector3D p2 = intersectPointInLine[1];
-            if (i == 0)
-                tempCores = twoCoresInbetween(p1, p2);
-            else if (i == 1)
-                tempCores = twoCoresInbetween(p1, p2, 7);
-            else
-                tempCores = fourCoresInbetween(p1, p2);
+            QVector3D p1 = intersectPointsMap[i][0];
+            QVector3D p2 = intersectPointsMap[i][1];
+            tempCores = fourCoresInbetween(p1, p2);
             cores.insert(cores.end(), tempCores.begin(), tempCores.end());
         }
-        else if (intersectPointInLine.size() == 4)
+        else if (intersectPointsMap[i].size() == 4)
         {
-            QVector3D p1 = intersectPointInLine[0];
-            QVector3D p2 = intersectPointInLine[1];
-            QVector3D p3 = intersectPointInLine[2];
-            QVector3D p4 = intersectPointInLine[3];
+            QVector3D p1 = intersectPointsMap[i][0];
+            QVector3D p2 = intersectPointsMap[i][1];
+            QVector3D p3 = intersectPointsMap[i][2];
+            QVector3D p4 = intersectPointsMap[i][3];
             std::vector<QVector3D> left = twoCoresInbetween(p1, p2);
             std::vector<QVector3D> right = twoCoresInbetween(p3, p4);
             cores.insert(cores.end(), left.begin(), left.end());
@@ -85,25 +88,66 @@ const std::vector<QVector3D> SystematicPointPlanner::twelveCores(vtkSmartPointer
 const std::vector<QVector3D> SystematicPointPlanner::twentyFourCores(vtkSmartPointer<vtkPolyData> modelPolyData, double* bounds)
 {
     std::vector<QVector3D> cores;
-    // calculate 3 contours
-    double z1, z2, z3;
-    z1 = bounds[4] + (bounds[5] - bounds[4]) * 1 / 6;
-    z2 = bounds[4] + (bounds[5] - bounds[4]) * 3 / 6;
-    z3 = bounds[4] + (bounds[5] - bounds[4]) * 5 / 6;
+    double zMid = (bounds[4] + bounds[5]) / 2;
+    double xRange = bounds[1] - bounds[0];
+    double xMid = (bounds[0] + bounds[1]) / 2;
 
-    // base 4+4 = 8
+    std::vector<std::pair<double, double>> lineRatios = {
+        { 6.0 / 12, 2.0 / 12 },
+        { 7.0 / 12, 9.0 / 12 },
+        { 9.0 / 12, 11.0 / 12 },
+    };
+    // left side lines
+    std::vector<std::pair<QVector3D, QVector3D>> leftLinePoints;
+    for (int i = 0; i < lineRatios.size(); i++)
+    {
+        double y1 = bounds[2] + (bounds[3] - bounds[2]) * lineRatios[i].first;
+        double y2 = bounds[2] + (bounds[3] - bounds[2]) * lineRatios[i].second;
+        QVector3D p1(bounds[0], y1, zMid);
+        QVector3D p2(xMid, y2, zMid);
+        leftLinePoints.push_back(std::make_pair(p1, p2));
+    }
 
-    std::pair<QVector3D, QVector3D> baseBounds = getCutContourBoundsAsPoints(modelPolyData, z1);
-    std::vector<double> baseRatios = { 1.0 / 6, 2.0 / 6, 4.0 / 6, 5.0 / 6 };
-    std::vector<double> baseYLines = getInterpolationLines(baseBounds.first.y(), baseBounds.second.y(), baseRatios);
-    std::map<int, std::vector<QVector3D>> intersectPointsMap = getModelLineIntersectionPoints(modelPolyData, bounds, baseYLines);
+    // intersection points
+    std::map<int, std::vector<QVector3D>> leftIntersectPointsMap = getModelLineIntersectionPoints(modelPolyData, leftLinePoints);
 
-    // mid 5+5 = 10
-    // apex 3+3 = 6
+    // add the cores
+    std::vector<QVector3D> leftTempCores;
+    for (int i = 0; i < leftLinePoints.size(); i++)
+    {
+        QVector3D p1 = leftIntersectPointsMap[i][0];
+        QVector3D p2 = leftLinePoints[i].second;
+        leftTempCores = fourCoresInbetween(p1, p2);
+        cores.insert(cores.end(), leftTempCores.begin(), leftTempCores.end());
+    }
+
+    // right side lines
+    std::vector<std::pair<QVector3D, QVector3D>> rightLinePoints;
+    for (int i = 0; i < lineRatios.size(); i++)
+    {
+        double y1 = bounds[2] + (bounds[3] - bounds[2]) * lineRatios[i].second;
+        double y2 = bounds[2] + (bounds[3] - bounds[2]) * lineRatios[i].first;
+        QVector3D p1(xMid, y1, zMid);
+        QVector3D p2(bounds[1], y2, zMid);
+        rightLinePoints.push_back(std::make_pair(p1, p2));
+    }
+
+    // intersection points
+    std::map<int, std::vector<QVector3D>> rightleftIntersectPointsMap = getModelLineIntersectionPoints(modelPolyData, rightLinePoints);
+
+    // add the cores
+    std::vector<QVector3D> rightTempCores;
+    for (int i = 0; i < leftLinePoints.size(); i++)
+    {
+        QVector3D p2 = rightLinePoints[i].first;
+        QVector3D p1 = rightleftIntersectPointsMap[i][rightleftIntersectPointsMap[i].size() - 1];
+        rightTempCores = fourCoresInbetween(p1, p2);
+        cores.insert(cores.end(), rightTempCores.begin(), rightTempCores.end());
+    }
     return cores;
 }
 
-const std::map<int, std::vector<QVector3D>> SystematicPointPlanner::getModelLineIntersectionPoints(vtkSmartPointer<vtkPolyData> modelPolyData, double* bounds, std::vector<double> lines)
+const std::map<int, std::vector<QVector3D>> SystematicPointPlanner::getModelLineIntersectionPoints(vtkSmartPointer<vtkPolyData> modelPolyData, std::vector<std::pair<QVector3D, QVector3D>> linePoints)
 {
     std::map<int, std::vector<QVector3D>> intersectPointsMap;
     vtkSmartPointer<vtkOBBTree> tree = vtkSmartPointer<vtkOBBTree>::New();
@@ -112,16 +156,14 @@ const std::map<int, std::vector<QVector3D>> SystematicPointPlanner::getModelLine
     double tol = 1.e-3;
     tree->SetTolerance(tol);
 
-    double xRange = bounds[1] - bounds[0];
-    double zMid = (bounds[4] + bounds[5]) / 2;
     vtkSmartPointer<vtkPoints> intersectPoints = vtkSmartPointer<vtkPoints>::New();
     vtkSmartPointer<vtkIdList> intersectCells = vtkSmartPointer<vtkIdList>::New();
 
-    for (int i = 0; i < lines.size(); i++)
+    for (int i = 0; i < linePoints.size(); i++)
     {
-        double p1[3] = { bounds[0] - xRange * 0.2, lines[i], zMid };
-        double p2[3] = { bounds[1] + xRange * 0.2, lines[i], zMid };
-
+        double p1[3], p2[3];
+        convertQVectorToDouble(linePoints[i].first, p1);
+        convertQVectorToDouble(linePoints[i].second, p2);
         tree->IntersectWithLine(p1, p2, intersectPoints, intersectCells);
         std::vector<QVector3D> tempPoints;
         for (int j = 0; j < intersectPoints->GetNumberOfPoints(); j++)
@@ -133,14 +175,6 @@ const std::map<int, std::vector<QVector3D>> SystematicPointPlanner::getModelLine
         intersectPointsMap.insert_or_assign(i, tempPoints);
     }
     return intersectPointsMap;
-}
-
-const std::vector<double> SystematicPointPlanner::getInterpolationLines(double minValue, double maxValue, std::vector<double> ratios)
-{
-    std::vector<double> lines;
-    for (int i = 0; i < ratios.size(); i++)
-        lines.push_back(minValue + (maxValue - minValue) * ratios[i]);
-    return lines;
 }
 
 const std::pair<QVector3D, QVector3D> SystematicPointPlanner::getCutContourBoundsAsPoints(vtkSmartPointer<vtkPolyData> modelPolyData, double zline)
@@ -162,6 +196,13 @@ const std::pair<QVector3D, QVector3D> SystematicPointPlanner::getCutContourBound
     return points;
 }
 
+const QVector3D SystematicPointPlanner::oneCoreInbetween(QVector3D& firstPoint, QVector3D& secondPoint)
+{
+    if (firstPoint.isNull() || secondPoint.isNull())
+        return QVector3D();
+    return (firstPoint + secondPoint) / 2;
+}
+
 const std::vector<QVector3D> SystematicPointPlanner::twoCoresInbetween(QVector3D& firstPoint, QVector3D& secondPoint, int nSection)
 {
     if (firstPoint.isNull() || secondPoint.isNull())
@@ -179,9 +220,16 @@ const std::vector<QVector3D> SystematicPointPlanner::fourCoresInbetween(QVector3
         return std::vector<QVector3D>();
 
     std::vector<QVector3D> cores;
-    cores.push_back(firstPoint + (secondPoint - firstPoint) / 8);
-    cores.push_back(firstPoint + (secondPoint - firstPoint) * 3 / 8);
-    cores.push_back(firstPoint + (secondPoint - firstPoint) * 5 / 8);
-    cores.push_back(firstPoint + (secondPoint - firstPoint) * 7 / 8);
+    cores.push_back(firstPoint + (secondPoint - firstPoint) / 5);
+    cores.push_back(firstPoint + (secondPoint - firstPoint) * 2 / 5);
+    cores.push_back(firstPoint + (secondPoint - firstPoint) * 3 / 5);
+    cores.push_back(firstPoint + (secondPoint - firstPoint) * 4 / 5);
     return cores;
+}
+
+void SystematicPointPlanner::convertQVectorToDouble(QVector3D& qVector, double* doubleArray)
+{
+    doubleArray[0] = qVector.x();
+    doubleArray[1] = qVector.y();
+    doubleArray[2] = qVector.z();
 }
