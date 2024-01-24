@@ -84,7 +84,7 @@ void main()
     QFileInfo specimenFile = QFileInfo(folderPath.absoluteFilePath(specimenFileName));
     for (auto file : files)
     {
-        if (file.isFile() && file.baseName().toLower().contains("t2"))
+        if (file.isFile() && file.baseName().toLower().contains("seg"))
         {
             vtkSmartPointer<vtkSTLReader> reader = vtkSmartPointer<vtkSTLReader>::New();
             reader->SetFileName(file.absoluteFilePath().toStdString().c_str());
