@@ -15,12 +15,14 @@ find_package(libs REQUIRED)
 find_package(VTK REQUIRED COMPONENTS
     vtkCommonCore
     vtkFiltersCore
-    vtkRenderingCore
     vtkIOImage
     vtkIOGeometry
     vtkInteractionStyle
-    vtkRenderingOpenGL2
+    vtkInteractionWidgets
     vtkImagingCore
+    vtkRenderingCore
+    vtkRenderingOpenGL2
+    vtkRenderingAnnotation
 )
 include(${VTK_USE_FILE})
 
@@ -33,11 +35,13 @@ FIND_PACKAGE(Qt5 REQUIRED COMPONENTS
 set(PROJECT_HDRS
     SystematicPointPlanner.h
     SystematicPointPlanner2.h
+    SystematicPointPlanner3.h
 )
 
 set(PROJECT_SOURCES
     SystematicPointPlanner.cpp
     SystematicPointPlanner2.cpp
+    SystematicPointPlanner3.cpp
 )
 
 set(QT_LIBRARIES
