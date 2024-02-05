@@ -19,16 +19,16 @@
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkWindowToImageFilter.h>
 
-SystematicPointPlanner* SystematicPointPlanner::m_instance = nullptr;
+SystematicPointPlannerTenTwelve* SystematicPointPlannerTenTwelve::m_instance = nullptr;
 
-SystematicPointPlanner* SystematicPointPlanner::getInstance()
+SystematicPointPlannerTenTwelve* SystematicPointPlannerTenTwelve::getInstance()
 {
     if (m_instance == nullptr)
-        m_instance = new SystematicPointPlanner();
+        m_instance = new SystematicPointPlannerTenTwelve();
     return m_instance;
 }
 
-SystematicPointPlanner::SystematicPointPlanner()
+SystematicPointPlannerTenTwelve::SystematicPointPlannerTenTwelve()
 {
     QFileInfo folderPath = QString("D:/GitRepos/ITKMedicalImageProcessing_demo/data/biopsy-plan");
     QString modelFileName = "MainMR_AxT2_seg.stl";
@@ -37,7 +37,7 @@ SystematicPointPlanner::SystematicPointPlanner()
     m_specimenStlFile = QFileInfo(folderPath.absoluteFilePath() + QDir::separator() + specimenFileName);
 }
 
-void SystematicPointPlanner::setModelStlFileName(QString fileName)
+void SystematicPointPlannerTenTwelve::setModelStlFileName(QString fileName)
 {
     QFileInfo modelStlFile = QFileInfo(fileName);
     if (m_modelStlFile.suffix() != "stl")
@@ -48,7 +48,7 @@ void SystematicPointPlanner::setModelStlFileName(QString fileName)
     m_modelStlFile = modelStlFile;
 }
 
-void SystematicPointPlanner::planSystematicPoints(SystematicPointsPlanType type)
+void SystematicPointPlannerTenTwelve::planSystematicPoints(SystematicPointsPlanType type)
 {
     if (!m_modelStlFile.exists())
     {
@@ -88,7 +88,7 @@ void SystematicPointPlanner::planSystematicPoints(SystematicPointsPlanType type)
     renderWindowInteractor->Start();
 }
 
-void SystematicPointPlanner::saveWindowToImage(QString& imgFileName, vtkSmartPointer<vtkRenderWindow> renderWindow)
+void SystematicPointPlannerTenTwelve::saveWindowToImage(QString& imgFileName, vtkSmartPointer<vtkRenderWindow> renderWindow)
 {
     QFileInfo imgFileInfo(imgFileName);
     if (!imgFileInfo.absoluteDir().exists())
@@ -114,7 +114,7 @@ void SystematicPointPlanner::saveWindowToImage(QString& imgFileName, vtkSmartPoi
     writer->Write();
 }
 
-std::vector<QVector3D> SystematicPointPlanner::getIntersectLines(double* bounds, SystematicPointsPlanType type)
+std::vector<QVector3D> SystematicPointPlannerTenTwelve::getIntersectLines(double* bounds, SystematicPointsPlanType type)
 {
     double x1, x2, y1, y2, zMid, xMid;
     double xRange;
@@ -159,7 +159,7 @@ std::vector<QVector3D> SystematicPointPlanner::getIntersectLines(double* bounds,
     return linePoints;
 }
 
-std::vector<vtkSmartPointer<vtkActor>> SystematicPointPlanner::generateActorFromCores(vtkPolyData* modelPolyData, double* bounds, SystematicPointsPlanType type)
+std::vector<vtkSmartPointer<vtkActor>> SystematicPointPlannerTenTwelve::generateActorFromCores(vtkPolyData* modelPolyData, double* bounds, SystematicPointsPlanType type)
 {
     std::vector<vtkSmartPointer<vtkActor>> specimenActors;
 
@@ -173,7 +173,7 @@ std::vector<vtkSmartPointer<vtkActor>> SystematicPointPlanner::generateActorFrom
     return specimenActors;
 }
 
-void SystematicPointPlanner::getIntersectPointsCoord(vtkPolyData* modelPolyData, double* bounds, SystematicPointsPlanType type)
+void SystematicPointPlannerTenTwelve::getIntersectPointsCoord(vtkPolyData* modelPolyData, double* bounds, SystematicPointsPlanType type)
 {
     if (m_intersectPoints.size() > 0)
         m_intersectPoints.clear();
@@ -210,7 +210,7 @@ void SystematicPointPlanner::getIntersectPointsCoord(vtkPolyData* modelPolyData,
     }
 }
 
-vtkSmartPointer<vtkActor> SystematicPointPlanner::generateSpecimenActorFromPoint(QVector3D& p)
+vtkSmartPointer<vtkActor> SystematicPointPlannerTenTwelve::generateSpecimenActorFromPoint(QVector3D& p)
 {
     if (!m_specimenStlFile.exists())
     {
@@ -240,7 +240,7 @@ vtkSmartPointer<vtkActor> SystematicPointPlanner::generateSpecimenActorFromPoint
     return specimenActor;
 }
 
-void SystematicPointPlanner::tenCores()
+void SystematicPointPlannerTenTwelve::tenCores()
 {
     if (m_cores.size() > 0)
         m_cores.clear();
@@ -282,7 +282,7 @@ void SystematicPointPlanner::tenCores()
     }
 }
 
-void SystematicPointPlanner::twelveCores()
+void SystematicPointPlannerTenTwelve::twelveCores()
 {
     if (m_cores.size() > 0)
         m_cores.clear();
@@ -321,7 +321,7 @@ void SystematicPointPlanner::twelveCores()
     }
 }
 
-std::vector<QVector3D> SystematicPointPlanner::FourCoresInbetween(QVector3D& firstPoint, QVector3D& secondPoint)
+std::vector<QVector3D> SystematicPointPlannerTenTwelve::FourCoresInbetween(QVector3D& firstPoint, QVector3D& secondPoint)
 {
     if (firstPoint.isNull() || secondPoint.isNull())
         return std::vector<QVector3D>();
@@ -334,7 +334,7 @@ std::vector<QVector3D> SystematicPointPlanner::FourCoresInbetween(QVector3D& fir
     return cores;
 }
 
-std::vector<QVector3D> SystematicPointPlanner::TwoCoresInbetween(QVector3D& firstPoint, QVector3D& secondPoint, int nSection)
+std::vector<QVector3D> SystematicPointPlannerTenTwelve::TwoCoresInbetween(QVector3D& firstPoint, QVector3D& secondPoint, int nSection)
 {
     if (firstPoint.isNull() || secondPoint.isNull())
         return std::vector<QVector3D>();

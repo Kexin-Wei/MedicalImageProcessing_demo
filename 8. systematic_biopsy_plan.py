@@ -42,12 +42,14 @@ def test_biopsy_plan(plan_method=PlanMethod.Boundary):
         bp.plan()
 
 
-def combine_result_img_into_one():
-    result_folder = Path("result").joinpath("biopsy-plan", "boundary")
+def combine_result_img_into_one(
+    folder_name="boundary", group_name=["ten_core", "twelve_core"]
+):
+    result_folder = Path("result").joinpath("biopsy-plan", folder_name)
     rf_mg = FolderMg(result_folder)
     rf_mg.ls()
 
-    group_img = {"ten_core": [], "twelve_core": []}
+    group_img = {group_name[0]: [], group_name[1]: []}
     for f in rf_mg.files:
         for k in group_img.keys():
             if k in f.name.lower():
@@ -65,4 +67,9 @@ def combine_result_img_into_one():
 
 if __name__ == "__main__":
     # test_biopsy_plan(plan_method=PlanMethod.Boundary)
-    combine_result_img_into_one()
+    # combine_result_img_into_one(
+    #     folder_name="boundary", group_name=["ten_core", "twelve_core"]
+    # )
+    combine_result_img_into_one(
+        folder_name="new-boundary", group_name=["twelve_core", "twentyfour_core"]
+    )

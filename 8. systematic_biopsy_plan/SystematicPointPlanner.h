@@ -15,12 +15,11 @@ VTK_MODULE_INIT(vtkRenderingOpenGL2);
 enum SystematicPointsPlanType
 {
     TEN_CORES,
-    TWELVE_CORESS
+    TWELVE_CORES
 };
 
 class SystematicPointPlannerWithBox
 {
-
 public:
     static SystematicPointPlannerWithBox* getInstance();
     ~SystematicPointPlannerWithBox();
