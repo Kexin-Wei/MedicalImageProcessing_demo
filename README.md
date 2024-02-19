@@ -14,6 +14,8 @@ A repo based on ITK to processing medical images
 6. `4d_dicom_reader.py`: test dicom reading for 4D dicom image
 7. `prostate_canser_segmentation.py`: use region grow or k-means functions to find the cancer
 8. `systematic_biopsy_plan.py`: plan 10/12 core systematic biopsy points
+9. `mri_slice_spacing.py`: verify whether the tag of slice_thickness is correct or not, conclusion: should not trust it, need to calculate it by using other tags
+10. `find_t2_dwi_adc.py`: find T2, DWI, or ADC images in the nested folder, and save the path of each image into excel
 
 
 # Additional Functions
@@ -23,5 +25,5 @@ A repo based on ITK to processing medical images
     - supported formats:
         - *.nrrd, "NrrdImageIO"
         - *.mha, "MetaImageIO"
-2. `f_findAllT2.py`: Find all images with string "t2" inside their names, do deep into each folder, and eventually
-   save all the path of each image into an Excel
+
+2. `f_sort_data_for_erinn.py`: Sort the data in segmentation dataset in pair and put into different folders
