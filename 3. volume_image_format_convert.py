@@ -7,7 +7,7 @@ import SimpleITK as sitk
 import numpy as np
 from pathlib import Path
 from lib.folder.basic import FolderMg
-from lib.folder.med import MedicalImageFolderMg, BaseMedicalImageFolderMg
+from lib.folder.med import DicomImageFolderMg, BaseMedicalImageFolderMg
 
 
 def fromDicomSeriesToDicomSeries():
@@ -115,7 +115,7 @@ def fromNrrdMetaFileToDicomSeries():
         "mri-prostate-slices-unsigned-og-normalized"
     )
     sourceMg = BaseMedicalImageFolderMg(sourceDataPath)
-    nrrdFiles = sourceMg.getNrrdImagePath()
+    nrrdFiles = sourceMg.get_nrrd_image_path()
     metaFiles = sourceMg.getMetaImagePath()
     # sourceMg.ls()
     print(
@@ -212,5 +212,5 @@ if __name__ == "__main__":
 
     # from dicom series to dicom series
     sourceDataPath = Path("D:/medical images/2D Segmentation/1-dicom slices")
-    sourceMg = MedicalImageFolderMg(sourceDataPath)
+    sourceMg = DicomImageFolderMg(sourceDataPath)
     print("Finished!")

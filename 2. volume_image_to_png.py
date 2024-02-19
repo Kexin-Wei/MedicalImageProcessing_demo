@@ -13,7 +13,7 @@ def transferMetaNrrdToPng():
     # sourceMg.ls()
 
     metaFile = sourceMg.getMetaImagePath()
-    nrrdFile = sourceMg.getNrrdImagePath()
+    nrrdFile = sourceMg.get_nrrd_image_path()
 
     for f in nrrdFile:
         outputFolderPath = destinationPath.joinpath(f"{f.stem}")
