@@ -1,10 +1,12 @@
 """kx 2024.1.19
 sort data for erinn in each pair in each folder
 """
+
 import os
 import shutil
 
-if __name__ == "__main__":
+
+def sort_old_dataset_for_erinn():
     from pathlib import Path
     from lib.folder.basic import FolderMg
 
@@ -35,3 +37,7 @@ if __name__ == "__main__":
             new_label = folder_i.joinpath(f"label_{label.name}")
             shutil.copy(label, new_label)
             shutil.copy(img, folder_i.joinpath(img.name))
+
+
+if __name__ == "__main__":
+    sort_old_dataset_for_erinn()
