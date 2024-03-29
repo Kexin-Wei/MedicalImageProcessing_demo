@@ -2,10 +2,12 @@
 convert 3D volume image to dicom series
 """
 import time
-import natsort
-import SimpleITK as sitk
-import numpy as np
 from pathlib import Path
+
+import SimpleITK as sitk
+import natsort
+import numpy as np
+
 from lib.folder.basic import FolderMg
 from lib.folder.med import DicomImageFolderMg, BaseMedicalImageFolderMg
 
@@ -116,7 +118,7 @@ def fromNrrdMetaFileToDicomSeries():
     )
     sourceMg = BaseMedicalImageFolderMg(sourceDataPath)
     nrrdFiles = sourceMg.get_nrrd_image_path()
-    metaFiles = sourceMg.getMetaImagePath()
+    metaFiles = sourceMg.get_meta_image_path()
     # sourceMg.ls()
     print(
         f"Start processing {len(nrrdFiles)} nrrd files and {len(metaFiles)} meta files"
