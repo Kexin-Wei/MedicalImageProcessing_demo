@@ -4,8 +4,9 @@ reading all the medical images in the designated folder, and convert them into n
     - *.nrrd, "NrrdImageIO"
     - *.mha, "MetaImageIO"
 """
-import SimpleITK as sitk
 from pathlib import Path
+
+import SimpleITK as sitk
 
 from lib.folder import BaseMedicalImageFolderMg
 
@@ -20,7 +21,7 @@ if not destinationDataPath.exists():
 sourceMg = BaseMedicalImageFolderMg(sourceDataPath)
 sourceMg.ls()
 
-metaImageFiles = sourceMg.getMetaImagePath()
+metaImageFiles = sourceMg.get_meta_image_path()
 nrrdImageFiles = sourceMg.getNrrdImagePath()
 
 for m in metaImageFiles:

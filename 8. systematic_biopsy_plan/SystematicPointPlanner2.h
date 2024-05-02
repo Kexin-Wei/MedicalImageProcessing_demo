@@ -15,19 +15,19 @@ VTK_MODULE_INIT(vtkRenderingOpenGL2);
 enum SystematicPointsPlanType
 {
     TEN_CORES,
-    TWELVE_CORESS
+    TWELVE_CORES
 };
 
-class SystematicPointPlanner
+class SystematicPointPlannerTenTwelve
 {
 public:
-    static SystematicPointPlanner* getInstance();
-    ~SystematicPointPlanner();
+    static SystematicPointPlannerTenTwelve* getInstance();
+    ~SystematicPointPlannerTenTwelve();
     void setModelStlFileName(QString fileName);
     void planSystematicPoints(SystematicPointsPlanType type);
 
 private:
-    SystematicPointPlanner();
+    SystematicPointPlannerTenTwelve();
     std::vector<QVector3D> TwoCoresInbetween(QVector3D& firstDiagonalPoint, QVector3D& secondDiagonalPoint, int nSection = 6);
     std::vector<QVector3D> FourCoresInbetween(QVector3D& firstDiagonalPoint, QVector3D& secondDiagonalPoint);
     vtkSmartPointer<vtkActor> generateSpecimenActorFromPoint(QVector3D& p);
@@ -38,7 +38,7 @@ private:
     void saveWindowToImage(QString& imgFileName, vtkSmartPointer<vtkRenderWindow> renderWindow);
     std::vector<vtkSmartPointer<vtkActor>> generateActorFromCores(vtkPolyData* modelPolyData, double* bounds, SystematicPointsPlanType type);
 
-    static SystematicPointPlanner* m_instance;
+    static SystematicPointPlannerTenTwelve* m_instance;
     QFileInfo m_modelStlFile;
     QFileInfo m_specimenStlFile;
     double* m_modelBounds;

@@ -2,7 +2,9 @@
 read 3D meta image and nrrd image, save every slice to png
 """
 from pathlib import Path
+
 import SimpleITK as sitk
+
 from lib.folder.med import BaseMedicalImageFolderMg, FolderMg
 
 
@@ -12,8 +14,8 @@ def transferMetaNrrdToPng():
     destinationPath = Path("data").joinpath("mri-prostate-slices")
     # sourceMg.ls()
 
-    metaFile = sourceMg.getMetaImagePath()
-    nrrdFile = sourceMg.getNrrdImagePath()
+    metaFile = sourceMg.get_meta_image_path()
+    nrrdFile = sourceMg.get_nrrd_image_path()
 
     for f in nrrdFile:
         outputFolderPath = destinationPath.joinpath(f"{f.stem}")
