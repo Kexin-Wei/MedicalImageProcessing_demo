@@ -1,6 +1,7 @@
 """2023.07.18 Kexin
 convert 3D volume image to dicom series
 """
+
 import time
 from pathlib import Path
 
@@ -9,7 +10,7 @@ import natsort
 import numpy as np
 
 from lib.folder.basic import FolderMg
-from lib.folder.med import DicomImageFolderMg, BaseMedicalImageFolderMg
+from lib.folder.med import DicomImageFolderMgITK, MedicalImageFolderMgBase
 
 
 def fromDicomSeriesToDicomSeries():
@@ -116,7 +117,7 @@ def fromNrrdMetaFileToDicomSeries():
     destinationPath = Path("data").joinpath(
         "mri-prostate-slices-unsigned-og-normalized"
     )
-    sourceMg = BaseMedicalImageFolderMg(sourceDataPath)
+    sourceMg = MedicalImageFolderMgBase(sourceDataPath)
     nrrdFiles = sourceMg.get_nrrd_image_path()
     metaFiles = sourceMg.get_meta_image_path()
     # sourceMg.ls()
@@ -214,5 +215,5 @@ if __name__ == "__main__":
 
     # from dicom series to dicom series
     sourceDataPath = Path("D:/medical images/2D Segmentation/1-dicom slices")
-    sourceMg = DicomImageFolderMg(sourceDataPath)
+    sourceMg = DicomImageFolderMgITK(sourceDataPath)
     print("Finished!")

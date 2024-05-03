@@ -1,16 +1,17 @@
 """2023.07.17 Kexin
 read 3D meta image and nrrd image, save every slice to png
 """
+
 from pathlib import Path
 
 import SimpleITK as sitk
 
-from lib.folder.med import BaseMedicalImageFolderMg, FolderMg
+from lib.folder.med import MedicalImageFolderMgBase, FolderMg
 
 
 def transferMetaNrrdToPng():
     sourceDataPath = Path("D:/medical images/2D Segmentation/0-og volume images")
-    sourceMg = BaseMedicalImageFolderMg(sourceDataPath)
+    sourceMg = MedicalImageFolderMgBase(sourceDataPath)
     destinationPath = Path("data").joinpath("mri-prostate-slices")
     # sourceMg.ls()
 
